@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+﻿import { Form, Head } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -58,6 +58,36 @@ export default function Register({ passwordRules }: Props) {
                                 <InputError message={errors.email} />
                             </div>
 
+                                                        <div className="grid gap-2">
+                                <Label htmlFor="phone">Contact number</Label>
+                                <Input
+                                    id="phone"
+                                    type="tel"
+                                    inputMode="tel"
+                                    required
+                                    maxLength={16}
+                                    pattern="(09|\+639)[0-9 \-]{9,12}"
+                                    title="09XX XXX XXXX or +63 9XX XXX XXXX"
+                                    onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/[^\d+\s-]/g, ''); }}
+                                    autoComplete="tel"
+                                    name="phone"
+                                    placeholder="09XX XXX XXXX"
+                                />
+                                <InputError message={errors.phone} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="address">Address</Label>
+                                <Input
+                                    id="address"
+                                    type="text"
+                                    autoComplete="street-address"
+                                    name="address"
+                                    placeholder="House no., street, barangay, city"
+                                />
+                                <InputError message={errors.address} />
+                            </div>
+
                             <div className="grid gap-2">
                                 <Label htmlFor="password">Password</Label>
                                 <PasswordInput
@@ -115,6 +145,6 @@ export default function Register({ passwordRules }: Props) {
 }
 
 Register.layout = {
-    title: 'Create an account',
-    description: 'Enter your details below to create your account',
+    title: 'Get your tag',
+    description: 'Create an account to start ordering.',
 };

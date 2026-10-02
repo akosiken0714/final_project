@@ -42,3 +42,20 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+# Local database (never commit live data)
+/database/database.sqlite
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Logs
+*.log
+/storage/logs/*.log
+
+# Extra env variants
+.env.local
+.env.staging
+.env.testing
+.env.*.local
+
+# OS noise
+Thumbs.db

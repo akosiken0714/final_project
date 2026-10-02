@@ -1,4 +1,4 @@
-import type { UrlMethodPair } from '@inertiajs/core';
+﻿import type { UrlMethodPair } from '@inertiajs/core';
 import { router } from '@inertiajs/react';
 import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { KeyRound } from 'lucide-react';

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
@@ -46,12 +47,22 @@ class ProfileController extends Controller
     /**
      * Delete the user's profile.
      */
-    public function destroy(ProfileDeleteRequest $request): RedirectResponse
+        public function destroy(ProfileDeleteRequest $request): RedirectResponse
     {
         $user = $request->user();
 
+        if ($user->isAdmin() && User::where('role', 'admin')->count() <= 1) {
+            return back()->withErrors(['password' => "You're the only admin, so this account can't be deleted."]);
+        }
+
         Auth::logout();
 
+        // Soft delete: order history stays, personal details are wiped.
+        $user->forceFill([
+            'email' => "deleted-{$user->id}@deleted.invalid",
+            'phone' => null,
+            'address' => null,
+        ])->save();
         $user->delete();
 
         $request->session()->invalidate();

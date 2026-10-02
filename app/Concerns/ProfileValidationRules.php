@@ -48,4 +48,25 @@ trait ProfileValidationRules
                 : Rule::unique(User::class)->ignore($userId),
         ];
     }
+
+    protected function phoneRules(bool $required = true): array
+    {
+        return [$required ? 'required' : 'nullable', 'string', 'regex:/^(09\d{9}|\+639\d{9})$/'];
+    }
+
+    protected function phoneMessages(): array
+    {
+        return ['phone.regex' => 'Use a Philippine number: 09XX XXX XXXX or +63 9XX XXX XXXX.'];
+    }
+
+    protected function cleanPhone(?string $phone): ?string
+    {
+        if ($phone === null) {
+            return null;
+        }
+
+        $clean = preg_replace('/[\s\-()]/', '', $phone);
+
+        return $clean === '' ? null : $clean;
+    }
 }

@@ -1,11 +1,11 @@
-@import 'tailwindcss';
+﻿@import 'tailwindcss';
 
 @import 'tw-animate-css';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.never-dark *));
 
 @theme {
     --font-sans:
@@ -130,6 +130,7 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(0.269 0 0);
     --sidebar-ring: oklch(0.439 0 0);
+    
 }
 
 @layer base {
@@ -140,4 +141,166 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+@keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes spin-back { to { transform: rotate(-360deg); } }
+@keyframes scan { from { transform: translateY(-10vh); } to { transform: translateY(110vh); } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(111,227,210,.5); } 50% { box-shadow: 0 0 30px 6px rgba(111,227,210,.35); } }
+
+.rise { animation: rise .8s cubic-bezier(.2,.8,.2,1) both; }
+.spin-slow { animation: spin-slow 18s linear infinite; }
+.spin-back { animation: spin-back 10s linear infinite; }
+.scan { animation: scan 5s linear infinite; }
+.marquee { animation: marquee 20s linear infinite; }
+.glow { animation: glow 2.5s ease-in-out infinite; }
+.grid-bg {
+  background-image: linear-gradient(#2A7F8633 1px, transparent 1px), linear-gradient(90deg, #2A7F8633 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.clip-cut { clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px)); }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+.float { animation: float 6s ease-in-out infinite; }
+html { scroll-behavior: smooth; }
+
+.reveal { opacity: 0; transform: translateY(40px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.8,.2,1); }
+.reveal.show { opacity: 1; transform: none; }
+
+@keyframes fill { from { width: 0; } to { width: 66%; } }
+.fill { animation: fill 2.5s .8s ease-out both; }
+@keyframes tabfill { from { width: 0; } to { width: 100%; } }
+.tabfill { animation: tabfill 4s linear both; }
+
+@keyframes wordup { from { opacity: 0; transform: translateY(70%); } to { opacity: 1; transform: none; } }
+.wordup { display: inline-block; animation: wordup .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.swing { transform-origin: top center; animation: swing 5s ease-in-out infinite; }
+@keyframes swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.swing { transform-origin: top center; animation: swing 5s ease-in-out infinite; }
+
+.drop { opacity: 0; transform: translateY(-90px) rotate(-10deg); transform-origin: top center; transition: opacity .6s ease, transform 1s cubic-bezier(.34, 1.56, .64, 1); }
+.drop.show { opacity: 1; transform: none; }
+/* ---------- auth pages: hanging order tag ---------- */
+@keyframes hang {
+    0% { opacity: 0; transform: translateY(-120px) rotate(-9deg); }
+    35% { opacity: 1; transform: translateY(0) rotate(6deg); }
+    55% { transform: rotate(-3.5deg); }
+    75% { transform: rotate(1.8deg); }
+    90% { transform: rotate(-0.6deg); }
+    100% { opacity: 1; transform: none; }
+}
+.hang { transform-origin: top center; animation: hang 1.8s cubic-bezier(.3, .7, .4, 1) both; }
+
+@keyframes barfill { from { transform: scaleX(0); } to { transform: none; } }
+.tagbar { transform-origin: left center; animation: barfill .7s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+    .hang, .tagbar { animation: none; }
+}
+
+.auth-tag {
+    --color-foreground: #0F1E2B;
+    --color-muted-foreground: rgba(15, 30, 43, .55);
+    --color-primary: #0F1E2B;
+    --color-primary-foreground: #F7F1E8;
+    --color-input: rgba(15, 30, 43, .3);
+    --color-ring: #F0A98B;
+}
+.auth-tag label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    color: rgba(15, 30, 43, .55);
+}
+.auth-tag input:not([data-input-otp]):not([type='checkbox']) {
+    background: transparent;
+    border-width: 0 0 1px 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding-left: 0;
+    font-size: 1rem;
+}
+.auth-tag input:not([data-input-otp]):not([type='checkbox']):focus-visible {
+    border-color: #0F1E2B;
+    box-shadow: 0 1px 0 0 #F0A98B;
+}
+.auth-tag button[data-slot='button'] {
+    border-radius: 9999px;
+    transition: background-color .3s, color .3s, transform .3s;
+}
+.auth-tag button[data-slot='button'][class~='bg-primary'] {
+    height: 2.75rem;
+}
+.auth-tag button[data-slot='button'][class~='bg-primary']:hover {
+    background-color: #F0A98B;
+    color: #0F1E2B;
+    transform: translateY(-1px);
+}
+.auth-tag a { text-decoration-color: rgba(15, 30, 43, .3); }
+.auth-tag a:hover { text-decoration-color: #F0A98B; }
+/* one theme for the whole app: navy pages, cream tags, peach accents */
+:root,
+.dark {
+    --background: #F7F1E8;
+    --foreground: #0F1E2B;
+    --card: #F7F1E8;
+    --card-foreground: #0F1E2B;
+    --popover: #F7F1E8;
+    --popover-foreground: #0F1E2B;
+    --primary: #0F1E2B;
+    --primary-foreground: #F7F1E8;
+    --secondary: #EDE4D3;
+    --secondary-foreground: #0F1E2B;
+    --muted: #EDE4D3;
+    --muted-foreground: rgba(15, 30, 43, .6);
+    --accent: #EDE4D3;
+    --accent-foreground: #0F1E2B;
+    --destructive: #C4441F;
+    --destructive-foreground: #F7F1E8;
+    --border: rgba(15, 30, 43, .15);
+    --input: rgba(15, 30, 43, .3);
+    --ring: #F0A98B;
+}
+
+/* browser autofill (saved emails/passwords) keeps the cream tag look */
+.auth-tag { color-scheme: light; }
+.auth-tag input:not([data-input-otp]):not([type='checkbox']):-webkit-autofill,
+.auth-tag input:not([data-input-otp]):not([type='checkbox']):-webkit-autofill:hover,
+.auth-tag input:not([data-input-otp]):not([type='checkbox']):-webkit-autofill:focus,
+.auth-tag input:not([data-input-otp]):not([type='checkbox']):-webkit-autofill:active {
+    -webkit-text-fill-color: #0F1E2B;
+    caret-color: #0F1E2B;
+    -webkit-box-shadow: 0 0 0 1000px #F7F1E8 inset;
+    box-shadow: 0 0 0 1000px #F7F1E8 inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+.auth-tag input:not([data-input-otp]):not([type='checkbox']):-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #F7F1E8 inset, 0 1px 0 0 #F0A98B;
+    box-shadow: 0 0 0 1000px #F7F1E8 inset, 0 1px 0 0 #F0A98B;
+}
+/* ---------- sewing thread + page backdrop (below the hero) ---------- */
+.sew-glow {
+    background:
+        radial-gradient(640px 420px at 12% 3%, rgba(92, 140, 168, .16), transparent 70%),
+        radial-gradient(720px 460px at 90% 30%, rgba(240, 169, 139, .08), transparent 70%),
+        radial-gradient(680px 440px at 10% 58%, rgba(92, 140, 168, .13), transparent 70%),
+        radial-gradient(760px 480px at 88% 84%, rgba(240, 169, 139, .07), transparent 70%);
+}
+.sew-grain {
+    opacity: .045;
+    background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@keyframes sew-speck {
+    from { transform: translate3d(0, 0, 0); opacity: 0; }
+    10%, 90% { opacity: var(--o); }
+    to { transform: translate3d(var(--dx), -110vh, 0); opacity: 0; }
+}
+.sew-speck { position: absolute; bottom: -12px; border-radius: 9999px; animation: sew-speck var(--d) linear var(--delay) infinite both; }
+@keyframes sew-pulse { 0%, 100% { transform: scale(1); opacity: .5; } 50% { transform: scale(2); opacity: 0; } }
+.sew-pulse { transform-box: fill-box; transform-origin: center; animation: sew-pulse 2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+    .sew-speck { display: none; }
+    .sew-pulse { animation: none; }
 }

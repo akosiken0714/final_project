@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react';
+﻿import { createInertiaApp } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -12,12 +12,14 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
-            case name === 'welcome':
+            case name.toLowerCase() === 'welcome':
+            case name.startsWith('Orders/'):
+            case name.startsWith('Admin/'):
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
-                return [AppLayout, SettingsLayout];
+                return SettingsLayout;
             default:
                 return AppLayout;
         }

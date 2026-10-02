@@ -1,4 +1,4 @@
-import { Form, Head, usePage } from '@inertiajs/react';
+﻿import { Form, Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
@@ -34,7 +34,7 @@ export default function Profile({
                 <Heading
                     variant="small"
                     title="Profile"
-                    description="Update your name and email address"
+                    description="Update your name, contact number, and address"
                 />
 
                 <Form
@@ -82,6 +82,49 @@ export default function Profile({
                                 <InputError
                                     className="mt-2"
                                     message={errors.email}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">Contact number</Label>
+
+                                <Input
+                                    id="phone"
+                                    type="tel"
+                                    inputMode="tel"
+                                    required
+                                    maxLength={16}
+                                    pattern="(09|\+639)[0-9 \-]{9,12}"
+                                    title="09XX XXX XXXX or +63 9XX XXX XXXX"
+                                    onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/[^\d+\s-]/g, ''); }}
+                                    className="mt-1 block w-full"
+                                    defaultValue={auth.user.phone ?? ''}
+                                    name="phone"
+                                    autoComplete="tel"
+                                    placeholder="09XX XXX XXXX"
+                                />
+
+                                <InputError
+                                    className="mt-2"
+                                    message={errors.phone}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="address">Address</Label>
+
+                                <Input
+                                    id="address"
+                                    className="mt-1 block w-full"
+                                    defaultValue={auth.user.address ?? ''}
+                                    name="address"
+                                    autoComplete="street-address"
+                                    placeholder="House no., street, barangay, city"
+                                />
+
+                                <InputError
+                                    className="mt-2"
+                                    message={errors.address}
                                 />
                             </div>
 

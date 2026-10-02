@@ -1,7 +1,10 @@
-export type User = {
+﻿export type User = {
     id: number;
     name: string;
     email: string;
+    phone: string | null;
+    address: string | null;
+    role: string;
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;

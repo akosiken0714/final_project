@@ -1,389 +1,766 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { dashboard, login } from '@/routes';
-import { register } from '@/routes';
+﻿import { Link, usePage } from '@inertiajs/react';
+import { CSSProperties, PointerEvent as ReactPointerEvent, PropsWithChildren, RefObject, memo, useEffect, useRef, useState } from 'react';
+import Reveal from '@/components/Reveal';
+import Shell from '@/components/Shell';
 
-export default function Welcome() {
-    const { auth } = usePage().props;
+// hero photo: save your image at public/images/hero.jpg (or change this path)
+const HERO_IMG = '/images/hero.jpg';
+
+const statuses = ['Pending', 'In Progress', 'Ready for Pickup', 'Completed'];
+
+const steps = [
+    ['01', 'Place your order', 'Pick a service, enter the weight, and add any notes or a photo. Your total is worked out for you.'],
+    ['02', 'We wash and dry', 'Once we receive your laundry, your order moves to In Progress.'],
+    ['03', 'Ready for you', 'You get the green light when everything is clean and folded.'],
+    ['04', 'Pick up or delivered', 'Come by the shop, or we bring it to your door.'],
+
+];
+
+// services shown on the landing page (real Phinewash pricing)
+const LANDING_SERVICES = [
+    { id: 'regular', name: 'Regular clothes', price: 180, unit: 'up to 8 kilos', note: 'Everyday laundry, washed and folded.' },
+    { id: 'beddings', name: 'Beddings', price: 190, unit: 'up to 6 kilos', note: 'Sheets, pillowcases, and covers.' },
+    { id: 'comforter-sm', name: 'Comforter (small–medium)', price: 200, unit: 'per piece', note: 'Single / double comforters.' },
+    { id: 'comforter-king', name: 'Comforter (king)', price: 230, unit: 'per piece', note: 'King-size comforters.' },
+];
+
+// TODO: replace phone + hours with the final details
+const SHOP = {
+    name: 'Phinewash Laundry Shop',
+    address: 'Poblacion, Anahawan, Southern Leyte (in front of the convent)',
+    hours: 'Mon–Sat 8:00 AM – 7:00 PM · Sun 9:00 AM – 5:00 PM',
+    phone: '0900 000 0000',
+    mapQuery: 'Phinewash Laundry Shop, Poblacion, Anahawan, Southern Leyte',
+    pickupNote: 'Pickup & delivery from ₱20 depending on distance.',
+};
+
+// tag that drops in when scrolled into view
+function Drop({ children, delay = 0 }: PropsWithChildren<{ delay?: number }>) {
+    const ref = useRef<HTMLDivElement>(null);
+    const [show, setShow] = useState(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const io = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setShow(true);
+                io.disconnect();
+            }
+        }, { threshold: 0.2 });
+        io.observe(el);
+        return () => io.disconnect();
+    }, []);
+    return (
+        <div ref={ref} className={`drop ${show ? 'show' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
+            {children}
+        </div>
+    );
+}
+
+// the big order tag (used in the sticky section)
+function Tag({ step, name, total }: { step: number; name: string; total: string }) {
+    return (
+        <div className="flex flex-col items-center">
+            <div className="h-24 w-px bg-[#F7F1E8]/40" />
+            <div className="w-64 rounded-3xl bg-[#F7F1E8] px-7 pb-8 pt-6 text-[#0F1E2B] shadow-2xl">
+                <div className="mx-auto -mt-1 mb-5 h-4 w-4 rounded-full border-2 border-[#0F1E2B]/40" />
+                <p className="text-[10px] uppercase tracking-[0.3em] text-[#0F1E2B]/50">Order tag</p>
+                <p className="mt-1 font-serif text-3xl">#0042</p>
+                <p className="mt-4 text-sm text-[#0F1E2B]/70">{name}</p>
+                <div className="mt-5 flex gap-1.5">
+                    {statuses.map((s, i) => (
+                        <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-700 ${i <= step ? 'bg-[#F0A98B]' : 'bg-[#0F1E2B]/15'}`} />
+                    ))}
+                </div>
+                <p key={step} className="rise mt-3 text-sm font-semibold">{statuses[step]}</p>
+                <div className="mt-5 flex items-end justify-between border-t border-dashed border-[#0F1E2B]/25 pt-4">
+                    <span className="text-[10px] uppercase tracking-widest text-[#0F1E2B]/50">Total</span>
+                    <span className="font-serif text-2xl">₱{total}</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// the hero clothesline: real laundry on a line that reacts to the wind, your scrolling and your cursor
+const lineY = (x: number) => 50 + 60 * (1 - Math.pow((x - 235) / 260, 2));
+
+const CLOTHES = [
+    { x: 80, kind: 'tee', k: 11, pins: [-20, 20] },
+    { x: 190, kind: 'towel', k: 15, pins: [-30, 30] },
+    { x: 285, kind: 'sock', k: 22, pins: [0] },
+    { x: 360, kind: 'cloth', k: 17, pins: [-24, 24] },
+    { x: 440, kind: 'kid', k: 20, pins: [-13, 13] },
+] as const;
+
+const TEE = 'M-20 0 L-42 12 L-52 34 L-34 40 L-30 30 L-30 78 L30 78 L30 30 L34 40 L52 34 L42 12 L20 0 C16 10 8 14 0 14 C-8 14 -16 10 -20 0 Z';
+
+function Garment({ kind }: { kind: string }) {
+    if (kind === 'tee') {
+        return (
+            <>
+                <path d={TEE} fill="#F7F1E8" />
+                <rect x="-30" y="66" width="60" height="6" fill="#F0A98B" opacity="0.85" />
+            </>
+        );
+    }
+    if (kind === 'towel') {
+        return (
+            <>
+                <rect x="-38" y="0" width="76" height="104" rx="3" fill="#F0A98B" />
+                <rect x="-38" y="76" width="76" height="5" fill="#F7F1E8" opacity="0.8" />
+                <rect x="-38" y="86" width="76" height="3" fill="#F7F1E8" opacity="0.8" />
+                {Array.from({ length: 9 }).map((_, i) => (
+                    <line key={i} x1={-34 + i * 8.5} y1="104" x2={-34 + i * 8.5} y2="111" stroke="#F0A98B" strokeWidth="2" strokeLinecap="round" />
+                ))}
+                <circle className="hl-drip" cx="-8" cy="112" r="2.6" fill="#A9D3E6" />
+            </>
+        );
+    }
+    if (kind === 'sock') {
+        return (
+            <>
+                <path d="M-14 0 H14 V46 C14 58 30 62 30 78 C30 96 6 100 -8 92 C-22 84 -14 62 -14 46 Z" fill="#5C8CA8" />
+                <rect x="-14" y="0" width="28" height="11" fill="#A9D3E6" />
+                <circle className="hl-drip hl-drip-b" cx="12" cy="98" r="2.4" fill="#A9D3E6" />
+            </>
+        );
+    }
+    if (kind === 'cloth') {
+        return (
+            <>
+                <rect x="-32" y="0" width="64" height="84" rx="4" fill="#A9D3E6" />
+                <rect x="-26" y="6" width="52" height="72" rx="3" fill="none" stroke="#F7F1E8" strokeWidth="1.4" strokeDasharray="3 3" opacity="0.75" />
+            </>
+        );
+    }
+    return (
+        <g transform="scale(0.62)">
+            <path d={TEE} fill="#EDE4D3" />
+            <rect x="-30" y="66" width="60" height="6" fill="#F0A98B" opacity="0.85" />
+        </g>
+    );
+}
+
+function HeroLine() {
+    const box = useRef<HTMLDivElement>(null);
+    const els = useRef<(SVGGElement | null)[]>([]);
+    const vel = useRef<number[]>(CLOTHES.map(() => 0));
+    const still = useRef(false);
+
+    useEffect(() => {
+        still.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const ang = CLOTHES.map(() => 0);
+        const paint = () =>
+            els.current.forEach((g, i) => {
+                const skew = Math.max(-8, Math.min(8, vel.current[i] * 0.03));
+                g?.setAttribute('transform', `rotate(${ang[i].toFixed(2)}) skewX(${skew.toFixed(2)})`);
+            });
+
+        if (still.current) {
+            CLOTHES.forEach((_, i) => (ang[i] = i % 2 ? 2 : -2));
+            paint();
+            return;
+        }
+
+        let gust = 0;
+        let lastY = window.scrollY;
+        let last = performance.now();
+        let raf = 0;
+        let visible = true;
+
+        // scrolling the page makes a gust, like walking past a washing line
+        const onScroll = () => {
+            const y = window.scrollY;
+            gust = Math.max(-28, Math.min(28, gust + (y - lastY) * 0.25));
+            lastY = y;
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
+        if (box.current) io.observe(box.current);
+
+        const tick = (now: number) => {
+            const dt = Math.min(0.033, (now - last) / 1000);
+            last = now;
+            if (visible) {
+                const t = now / 1000;
+                gust *= Math.pow(0.15, dt);
+                CLOTHES.forEach((c, i) => {
+                    // a breeze that travels along the line, and a stronger gust every few seconds
+                    const breeze = Math.sin(t * 0.9 - c.x / 90) * 3;
+                    const pulse = Math.pow(Math.max(0, Math.sin(t * 0.5 - c.x / 260)), 8) * 15;
+                    const target = -(breeze + pulse) - gust;
+                    const w = Math.sqrt(c.k);
+                    const acc = c.k * (target - ang[i]) - 2 * 0.28 * w * vel.current[i];
+                    vel.current[i] += acc * dt;
+                    ang[i] = Math.max(-45, Math.min(45, ang[i] + vel.current[i] * dt));
+                });
+                paint();
+            }
+            raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('scroll', onScroll);
+            io.disconnect();
+        };
+    }, []);
+
+    // brushing your cursor across the line swings the laundry
+    const onMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+        if (still.current || !box.current) return;
+        const r = box.current.getBoundingClientRect();
+        const scale = 480 / r.width;
+        const sx = (e.clientX - r.left) * scale;
+        const dx = e.movementX * scale;
+        CLOTHES.forEach((c, i) => {
+            if (Math.abs(sx - c.x) < 70) {
+                vel.current[i] = Math.max(-260, Math.min(260, vel.current[i] - dx * 6));
+            }
+        });
+    };
+
+    const pts = Array.from({ length: 27 }, (_, i) => `${i === 0 ? 'M' : 'L'} ${-20 + i * 20} ${lineY(-20 + i * 20).toFixed(1)}`).join(' ');
 
     return (
-        <>
-            <Head title="Welcome" />
-            <div className="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
-                <header className="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
-                    <nav className="flex items-center justify-end gap-4">
-                        {auth.user ? (
-                            <Link
-                                href={dashboard()}
-                                className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                            >
-                                Dashboard
-                            </Link>
-                        ) : (
-                            <>
-                                <Link
-                                    href={login()}
-                                    className="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                                >
-                                    Log in
-                                </Link>
-                                <Link
-                                    href={register()}
-                                    className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                                >
-                                    Register
-                                </Link>
-                            </>
-                        )}
-                    </nav>
-                </header>
-                <div className="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
-                    <main className="flex w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row">
-                        <div className="flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]">
-                            <h1 className="mb-1 font-medium">
-                                Let's get started
-                            </h1>
-                            <p className="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                                Laravel has an incredibly rich ecosystem.
-                                <br />
-                                We suggest starting with the following.
-                            </p>
-                            <ul className="mb-4 flex flex-col lg:mb-6">
-                                <li className="relative flex items-center gap-4 py-2 before:absolute before:top-1/2 before:bottom-0 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]">
-                                    <span className="relative bg-white py-1 dark:bg-[#161615]">
-                                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615]">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]" />
-                                        </span>
-                                    </span>
-                                    <span>
-                                        Read the
-                                        <a
-                                            href="https://laravel.com/docs"
-                                            target="_blank"
-                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
-                                        >
-                                            <span>Documentation</span>
-                                            <svg
-                                                width={10}
-                                                height={11}
-                                                viewBox="0 0 10 11"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-2.5 w-2.5"
-                                            >
-                                                <path
-                                                    d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001"
-                                                    stroke="currentColor"
-                                                    strokeLinecap="square"
-                                                />
-                                            </svg>
-                                        </a>
-                                    </span>
-                                </li>
-                                <li className="relative flex items-center gap-4 py-2 before:absolute before:top-0 before:bottom-1/2 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]">
-                                    <span className="relative bg-white py-1 dark:bg-[#161615]">
-                                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615]">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]" />
-                                        </span>
-                                    </span>
-                                    <span>
-                                        Watch video tutorials at
-                                        <a
-                                            href="https://laracasts.com"
-                                            target="_blank"
-                                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
-                                        >
-                                            <span>Laracasts</span>
-                                            <svg
-                                                width={10}
-                                                height={11}
-                                                viewBox="0 0 10 11"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-2.5 w-2.5"
-                                            >
-                                                <path
-                                                    d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001"
-                                                    stroke="currentColor"
-                                                    strokeLinecap="square"
-                                                />
-                                            </svg>
-                                        </a>
-                                    </span>
-                                </li>
-                            </ul>
-                            <ul className="flex gap-3 text-sm leading-normal">
-                                <li>
-                                    <a
-                                        href="https://cloud.laravel.com"
-                                        target="_blank"
-                                        className="inline-block rounded-sm border border-black bg-[#1b1b18] px-5 py-1.5 text-sm leading-normal text-white hover:border-black hover:bg-black dark:border-[#eeeeec] dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:border-white dark:hover:bg-white"
-                                    >
-                                        Deploy now
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="relative -mb-px aspect-[335/364] w-full shrink-0 overflow-hidden rounded-t-lg bg-[#fff2f2] lg:mb-0 lg:-ml-px lg:aspect-auto lg:w-[438px] lg:rounded-t-none lg:rounded-r-lg dark:bg-[#1D0002]">
-                            {/* Laravel Logo */}
-                            <svg
-                                className="w-full max-w-none translate-y-0 text-[#F53003] opacity-100 transition-all duration-750 dark:text-[#F61500] starting:opacity-0 motion-safe:starting:translate-y-6"
-                                viewBox="0 0 438 104"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M17.2036 -3H0V102.197H49.5189V86.7187H17.2036V-3Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M110.256 41.6337C108.061 38.1275 104.945 35.3731 100.905 33.3681C96.8667 31.3647 92.8016 30.3618 88.7131 30.3618C83.4247 30.3618 78.5885 31.3389 74.201 33.2923C69.8111 35.2456 66.0474 37.928 62.9059 41.3333C59.7643 44.7401 57.3198 48.6726 55.5754 53.1293C53.8287 57.589 52.9572 62.274 52.9572 67.1813C52.9572 72.1925 53.8287 76.8995 55.5754 81.3069C57.3191 85.7173 59.7636 89.6241 62.9059 93.0293C66.0474 96.4361 69.8119 99.1155 74.201 101.069C78.5885 103.022 83.4247 103.999 88.7131 103.999C92.8016 103.999 96.8667 102.997 100.905 100.994C104.945 98.9911 108.061 96.2359 110.256 92.7282V102.195H126.563V32.1642H110.256V41.6337ZM108.76 75.7472C107.762 78.4531 106.366 80.8078 104.572 82.8112C102.776 84.8161 100.606 86.4183 98.0637 87.6206C95.5202 88.823 92.7004 89.4238 89.6103 89.4238C86.5178 89.4238 83.7252 88.823 81.2324 87.6206C78.7388 86.4183 76.5949 84.8161 74.7998 82.8112C73.004 80.8078 71.6319 78.4531 70.6856 75.7472C69.7356 73.0421 69.2644 70.1868 69.2644 67.1821C69.2644 64.1758 69.7356 61.3205 70.6856 58.6154C71.6319 55.9102 73.004 53.5571 74.7998 51.5522C76.5949 49.5495 78.738 47.9451 81.2324 46.7427C83.7252 45.5404 86.5178 44.9396 89.6103 44.9396C92.7012 44.9396 95.5202 45.5404 98.0637 46.7427C100.606 47.9451 102.776 49.5487 104.572 51.5522C106.367 53.5571 107.762 55.9102 108.76 58.6154C109.756 61.3205 110.256 64.1758 110.256 67.1821C110.256 70.1868 109.756 73.0421 108.76 75.7472Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M242.805 41.6337C240.611 38.1275 237.494 35.3731 233.455 33.3681C229.416 31.3647 225.351 30.3618 221.262 30.3618C215.974 30.3618 211.138 31.3389 206.75 33.2923C202.36 35.2456 198.597 37.928 195.455 41.3333C192.314 44.7401 189.869 48.6726 188.125 53.1293C186.378 57.589 185.507 62.274 185.507 67.1813C185.507 72.1925 186.378 76.8995 188.125 81.3069C189.868 85.7173 192.313 89.6241 195.455 93.0293C198.597 96.4361 202.361 99.1155 206.75 101.069C211.138 103.022 215.974 103.999 221.262 103.999C225.351 103.999 229.416 102.997 233.455 100.994C237.494 98.9911 240.611 96.2359 242.805 92.7282V102.195H259.112V32.1642H242.805V41.6337ZM241.31 75.7472C240.312 78.4531 238.916 80.8078 237.122 82.8112C235.326 84.8161 233.156 86.4183 230.614 87.6206C228.07 88.823 225.251 89.4238 222.16 89.4238C219.068 89.4238 216.275 88.823 213.782 87.6206C211.289 86.4183 209.145 84.8161 207.35 82.8112C205.554 80.8078 204.182 78.4531 203.236 75.7472C202.286 73.0421 201.814 70.1868 201.814 67.1821C201.814 64.1758 202.286 61.3205 203.236 58.6154C204.182 55.9102 205.554 53.5571 207.35 51.5522C209.145 49.5495 211.288 47.9451 213.782 46.7427C216.275 45.5404 219.068 44.9396 222.16 44.9396C225.251 44.9396 228.07 45.5404 230.614 46.7427C233.156 47.9451 235.326 49.5487 237.122 51.5522C238.917 53.5571 240.312 55.9102 241.31 58.6154C242.306 61.3205 242.806 64.1758 242.806 67.1821C242.805 70.1868 242.305 73.0421 241.31 75.7472Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M438 -3H421.694V102.197H438V-3Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M139.43 102.197H155.735V48.2834H183.712V32.1665H139.43V102.197Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M324.49 32.1665L303.995 85.794L283.498 32.1665H266.983L293.748 102.197H314.242L341.006 32.1665H324.49Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M376.571 30.3656C356.603 30.3656 340.797 46.8497 340.797 67.1828C340.797 89.6597 356.094 104 378.661 104C391.29 104 399.354 99.1488 409.206 88.5848L398.189 80.0226C398.183 80.031 389.874 90.9895 377.468 90.9895C363.048 90.9895 356.977 79.3111 356.977 73.269H411.075C413.917 50.1328 398.775 30.3656 376.571 30.3656ZM357.02 61.0967C357.145 59.7487 359.023 43.3761 376.442 43.3761C393.861 43.3761 395.978 59.7464 396.099 61.0967H357.02Z"
-                                    fill="currentColor"
-                                />
-                            </svg>
+        <div ref={box} onPointerMove={onMove} className="w-full max-w-[480px] md:ml-auto">
+            <style>{`
+                @keyframes hl-drip { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 80% { opacity: .6; } 100% { transform: translateY(40px); opacity: 0; } }
+                .hl-drip { animation: hl-drip 3.4s ease-in infinite; }
+                .hl-drip-b { animation-delay: 1.7s; }
+                @media (prefers-reduced-motion: reduce) { .hl-drip { animation: none; opacity: 0; } }
+            `}</style>
+            <svg viewBox="0 0 480 270" className="h-auto w-full overflow-visible" style={{ filter: 'drop-shadow(0 10px 14px rgba(0,0,0,0.35))' }} aria-hidden="true">
+                <path d={pts} fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="3" transform="translate(0 3)" />
+                <path d={pts} fill="none" stroke="rgba(247,241,232,0.7)" strokeWidth="2.2" strokeLinecap="round" />
+                {CLOTHES.map((c, i) => (
+                    <g key={c.x} transform={`translate(${c.x} ${lineY(c.x).toFixed(1)})`}>
+                        <g ref={(el) => { els.current[i] = el; }}>
+                            <Garment kind={c.kind} />
+                        </g>
+                    </g>
+                ))}
+                {CLOTHES.flatMap((c) =>
+                    c.pins.map((dx) => (
+                        <g key={`${c.x}-${dx}`} transform={`translate(${c.x + dx} ${lineY(c.x + dx).toFixed(1)})`}>
+                            <rect x="-4.5" y="-8" width="9" height="20" rx="2.5" fill="#F0A98B" />
+                            <rect x="-4.5" y="-8" width="9" height="5" rx="2" fill="#F7F1E8" opacity="0.35" />
+                        </g>
+                    )),
+                )}
+            </svg>
+        </div>
+    );
+}
 
-                            {/* 13 */}
-                            <svg
-                                className="relative -mt-[6.6rem] -ml-8 w-[438px] max-w-none [--stroke-color:#1B1B18] lg:ml-0 dark:[--stroke-color:#FF750F]"
-                                viewBox="0 0 440 392"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <g className="text-[#1B1B18] opacity-100 mix-blend-darken transition-all delay-300 duration-750 dark:text-black dark:mix-blend-normal starting:opacity-0">
-                                    <mask
-                                        id="path-1-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="-0.328613"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="-0.328613"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M234.936 400.8C204.136 400.8 178.936 392.4 159.336 375.6C140.136 358.8 130.536 337 130.536 310.2H200.736C200.736 318.2 203.736 324.8 209.736 330C215.736 335.2 223.736 337.8 233.736 337.8C243.336 337.8 251.136 335 257.136 329.4C263.536 323.8 266.736 316.6 266.736 307.8C266.736 299.8 263.936 293.2 258.336 288C252.736 282.8 245.536 280.2 236.736 280.2H199.536V218.4H236.736C243.536 218.4 249.336 216 254.136 211.2C258.936 206.4 261.336 200.4 261.336 193.2C261.336 184.8 258.736 178.2 253.536 173.4C248.336 168.6 241.736 166.2 233.736 166.2C226.536 166.2 220.336 168.4 215.136 172.8C210.336 177.2 207.936 182.8 207.936 189.6H141.336C141.336 164.8 150.136 144.6 167.736 129C185.336 113 207.936 105 235.536 105C263.136 105 285.536 112.2 302.736 126.6C320.336 141 329.136 160 329.136 183.6C329.136 200.8 324.536 214.8 315.336 225.6C306.136 236 294.336 243.2 279.936 247.2C297.136 252 310.736 260.2 320.736 271.8C331.136 283.4 336.336 298 336.336 315.6C336.336 340.4 326.936 360.8 308.136 376.8C289.336 392.8 264.936 400.8 234.936 400.8Z" />
-                                        <path d="M26.8714 167.6H1.67139V105.2H94.6714V400.2H26.8714V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M234.936 400.8C204.136 400.8 178.936 392.4 159.336 375.6C140.136 358.8 130.536 337 130.536 310.2H200.736C200.736 318.2 203.736 324.8 209.736 330C215.736 335.2 223.736 337.8 233.736 337.8C243.336 337.8 251.136 335 257.136 329.4C263.536 323.8 266.736 316.6 266.736 307.8C266.736 299.8 263.936 293.2 258.336 288C252.736 282.8 245.536 280.2 236.736 280.2H199.536V218.4H236.736C243.536 218.4 249.336 216 254.136 211.2C258.936 206.4 261.336 200.4 261.336 193.2C261.336 184.8 258.736 178.2 253.536 173.4C248.336 168.6 241.736 166.2 233.736 166.2C226.536 166.2 220.336 168.4 215.136 172.8C210.336 177.2 207.936 182.8 207.936 189.6H141.336C141.336 164.8 150.136 144.6 167.736 129C185.336 113 207.936 105 235.536 105C263.136 105 285.536 112.2 302.736 126.6C320.336 141 329.136 160 329.136 183.6C329.136 200.8 324.536 214.8 315.336 225.6C306.136 236 294.336 243.2 279.936 247.2C297.136 252 310.736 260.2 320.736 271.8C331.136 283.4 336.336 298 336.336 315.6C336.336 340.4 326.936 360.8 308.136 376.8C289.336 392.8 264.936 400.8 234.936 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M26.8714 167.6H1.67139V105.2H94.6714V400.2H26.8714V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M234.936 400.8C204.136 400.8 178.936 392.4 159.336 375.6C140.136 358.8 130.536 337 130.536 310.2H200.736C200.736 318.2 203.736 324.8 209.736 330C215.736 335.2 223.736 337.8 233.736 337.8C243.336 337.8 251.136 335 257.136 329.4C263.536 323.8 266.736 316.6 266.736 307.8C266.736 299.8 263.936 293.2 258.336 288C252.736 282.8 245.536 280.2 236.736 280.2H199.536V218.4H236.736C243.536 218.4 249.336 216 254.136 211.2C258.936 206.4 261.336 200.4 261.336 193.2C261.336 184.8 258.736 178.2 253.536 173.4C248.336 168.6 241.736 166.2 233.736 166.2C226.536 166.2 220.336 168.4 215.136 172.8C210.336 177.2 207.936 182.8 207.936 189.6H141.336C141.336 164.8 150.136 144.6 167.736 129C185.336 113 207.936 105 235.536 105C263.136 105 285.536 112.2 302.736 126.6C320.336 141 329.136 160 329.136 183.6C329.136 200.8 324.536 214.8 315.336 225.6C306.136 236 294.336 243.2 279.936 247.2C297.136 252 310.736 260.2 320.736 271.8C331.136 283.4 336.336 298 336.336 315.6C336.336 340.4 326.936 360.8 308.136 376.8C289.336 392.8 264.936 400.8 234.936 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-1-mask)"
-                                    />
-                                    <path
-                                        d="M26.8714 167.6H1.67139V105.2H94.6714V400.2H26.8714V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-1-mask)"
-                                    />
-                                </g>
+// the sewing thread: one peach thread that stitches the sections together (desktop only)
+const SewThread = memo(function SewThread({ wrap }: { wrap: RefObject<HTMLDivElement | null> }) {
+    const [geo, setGeo] = useState<{ w: number; h: number; d: string } | null>(null);
+    const path = useRef<SVGPathElement>(null);
+    const needle = useRef<SVGGElement>(null);
 
-                                <g className="text-[#F3BEC7] opacity-100 transition-all delay-400 duration-750 dark:text-[#4B0600] starting:opacity-0 motion-safe:starting:-translate-x-[26px]">
-                                    <mask
-                                        id="path-2-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="25.3357"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="25.3357"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M260.6 400.8C229.8 400.8 204.6 392.4 185 375.6C165.8 358.8 156.2 337 156.2 310.2H226.4C226.4 318.2 229.4 324.8 235.4 330C241.4 335.2 249.4 337.8 259.4 337.8C269 337.8 276.8 335 282.8 329.4C289.2 323.8 292.4 316.6 292.4 307.8C292.4 299.8 289.6 293.2 284 288C278.4 282.8 271.2 280.2 262.4 280.2H225.2V218.4H262.4C269.2 218.4 275 216 279.8 211.2C284.6 206.4 287 200.4 287 193.2C287 184.8 284.4 178.2 279.2 173.4C274 168.6 267.4 166.2 259.4 166.2C252.2 166.2 246 168.4 240.8 172.8C236 177.2 233.6 182.8 233.6 189.6H167C167 164.8 175.8 144.6 193.4 129C211 113 233.6 105 261.2 105C288.8 105 311.2 112.2 328.4 126.6C346 141 354.8 160 354.8 183.6C354.8 200.8 350.2 214.8 341 225.6C331.8 236 320 243.2 305.6 247.2C322.8 252 336.4 260.2 346.4 271.8C356.8 283.4 362 298 362 315.6C362 340.4 352.6 360.8 333.8 376.8C315 392.8 290.6 400.8 260.6 400.8Z" />
-                                        <path d="M52.5357 167.6H27.3357V105.2H120.336V400.2H52.5357V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M260.6 400.8C229.8 400.8 204.6 392.4 185 375.6C165.8 358.8 156.2 337 156.2 310.2H226.4C226.4 318.2 229.4 324.8 235.4 330C241.4 335.2 249.4 337.8 259.4 337.8C269 337.8 276.8 335 282.8 329.4C289.2 323.8 292.4 316.6 292.4 307.8C292.4 299.8 289.6 293.2 284 288C278.4 282.8 271.2 280.2 262.4 280.2H225.2V218.4H262.4C269.2 218.4 275 216 279.8 211.2C284.6 206.4 287 200.4 287 193.2C287 184.8 284.4 178.2 279.2 173.4C274 168.6 267.4 166.2 259.4 166.2C252.2 166.2 246 168.4 240.8 172.8C236 177.2 233.6 182.8 233.6 189.6H167C167 164.8 175.8 144.6 193.4 129C211 113 233.6 105 261.2 105C288.8 105 311.2 112.2 328.4 126.6C346 141 354.8 160 354.8 183.6C354.8 200.8 350.2 214.8 341 225.6C331.8 236 320 243.2 305.6 247.2C322.8 252 336.4 260.2 346.4 271.8C356.8 283.4 362 298 362 315.6C362 340.4 352.6 360.8 333.8 376.8C315 392.8 290.6 400.8 260.6 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M52.5357 167.6H27.3357V105.2H120.336V400.2H52.5357V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M260.6 400.8C229.8 400.8 204.6 392.4 185 375.6C165.8 358.8 156.2 337 156.2 310.2H226.4C226.4 318.2 229.4 324.8 235.4 330C241.4 335.2 249.4 337.8 259.4 337.8C269 337.8 276.8 335 282.8 329.4C289.2 323.8 292.4 316.6 292.4 307.8C292.4 299.8 289.6 293.2 284 288C278.4 282.8 271.2 280.2 262.4 280.2H225.2V218.4H262.4C269.2 218.4 275 216 279.8 211.2C284.6 206.4 287 200.4 287 193.2C287 184.8 284.4 178.2 279.2 173.4C274 168.6 267.4 166.2 259.4 166.2C252.2 166.2 246 168.4 240.8 172.8C236 177.2 233.6 182.8 233.6 189.6H167C167 164.8 175.8 144.6 193.4 129C211 113 233.6 105 261.2 105C288.8 105 311.2 112.2 328.4 126.6C346 141 354.8 160 354.8 183.6C354.8 200.8 350.2 214.8 341 225.6C331.8 236 320 243.2 305.6 247.2C322.8 252 336.4 260.2 346.4 271.8C356.8 283.4 362 298 362 315.6C362 340.4 352.6 360.8 333.8 376.8C315 392.8 290.6 400.8 260.6 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-2-mask)"
-                                    />
-                                    <path
-                                        d="M52.5357 167.6H27.3357V105.2H120.336V400.2H52.5357V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-2-mask)"
-                                    />
-                                </g>
+    // work out the route from where the sections really are on the page
+    useEffect(() => {
+        const box = wrap.current;
+        if (!box) return;
+        const build = () => {
+            const w = box.clientWidth;
+            const h = box.clientHeight;
+            if (w < 1280) {
+                setGeo(null);
+                return;
+            }
+            const top = box.getBoundingClientRect().top;
+            const at = (sel: string) => {
+                const el = box.querySelector(sel);
+                return el ? el.getBoundingClientRect().top - top : null;
+            };
+            const marks = ['#features', '#pricing', '#find-us', '#about'].map(at);
+            const footer = at('footer');
+            const end = footer !== null ? footer : h;
+            if (marks.some((m) => m === null)) {
+                setGeo(null);
+                return;
+            }
+            const left = Math.max(20, (w - 1152) / 4);
+            const right = w - left;
+            let x = left;
+            let d = `M ${left} 0`;
+            (marks as number[]).forEach((y) => {
+                const nx = x === left ? right : left;
+                d += ` L ${x} ${y - 70} C ${x} ${y} ${nx} ${y} ${nx} ${y + 70}`;
+                x = nx;
+            });
+            d += ` L ${x} ${end}`;
+            setGeo((prev) => (prev && prev.d === d && prev.w === w && prev.h === h ? prev : { w, h, d }));
+        };
+        build();
+        const ro = new ResizeObserver(build);
+        ro.observe(box);
+        return () => ro.disconnect();
+    }, [wrap]);
 
-                                <g className="text-[#F8B803] opacity-100 mix-blend-color transition-all delay-400 duration-750 dark:text-[#391800] dark:mix-blend-hard-light starting:opacity-0 motion-safe:starting:-translate-x-[51px]">
-                                    <mask
-                                        id="path-3-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="51"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="51"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M286.264 400.8C255.464 400.8 230.264 392.4 210.664 375.6C191.464 358.8 181.864 337 181.864 310.2H252.064C252.064 318.2 255.064 324.8 261.064 330C267.064 335.2 275.064 337.8 285.064 337.8C294.664 337.8 302.464 335 308.464 329.4C314.864 323.8 318.064 316.6 318.064 307.8C318.064 299.8 315.264 293.2 309.664 288C304.064 282.8 296.864 280.2 288.064 280.2H250.864V218.4H288.064C294.864 218.4 300.664 216 305.464 211.2C310.264 206.4 312.664 200.4 312.664 193.2C312.664 184.8 310.064 178.2 304.864 173.4C299.664 168.6 293.064 166.2 285.064 166.2C277.864 166.2 271.664 168.4 266.464 172.8C261.664 177.2 259.264 182.8 259.264 189.6H192.664C192.664 164.8 201.464 144.6 219.064 129C236.664 113 259.264 105 286.864 105C314.464 105 336.864 112.2 354.064 126.6C371.664 141 380.464 160 380.464 183.6C380.464 200.8 375.864 214.8 366.664 225.6C357.464 236 345.664 243.2 331.264 247.2C348.464 252 362.064 260.2 372.064 271.8C382.464 283.4 387.664 298 387.664 315.6C387.664 340.4 378.264 360.8 359.464 376.8C340.664 392.8 316.264 400.8 286.264 400.8Z" />
-                                        <path d="M78.2 167.6H53V105.2H146V400.2H78.2V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M286.264 400.8C255.464 400.8 230.264 392.4 210.664 375.6C191.464 358.8 181.864 337 181.864 310.2H252.064C252.064 318.2 255.064 324.8 261.064 330C267.064 335.2 275.064 337.8 285.064 337.8C294.664 337.8 302.464 335 308.464 329.4C314.864 323.8 318.064 316.6 318.064 307.8C318.064 299.8 315.264 293.2 309.664 288C304.064 282.8 296.864 280.2 288.064 280.2H250.864V218.4H288.064C294.864 218.4 300.664 216 305.464 211.2C310.264 206.4 312.664 200.4 312.664 193.2C312.664 184.8 310.064 178.2 304.864 173.4C299.664 168.6 293.064 166.2 285.064 166.2C277.864 166.2 271.664 168.4 266.464 172.8C261.664 177.2 259.264 182.8 259.264 189.6H192.664C192.664 164.8 201.464 144.6 219.064 129C236.664 113 259.264 105 286.864 105C314.464 105 336.864 112.2 354.064 126.6C371.664 141 380.464 160 380.464 183.6C380.464 200.8 375.864 214.8 366.664 225.6C357.464 236 345.664 243.2 331.264 247.2C348.464 252 362.064 260.2 372.064 271.8C382.464 283.4 387.664 298 387.664 315.6C387.664 340.4 378.264 360.8 359.464 376.8C340.664 392.8 316.264 400.8 286.264 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M78.2 167.6H53V105.2H146V400.2H78.2V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M286.264 400.8C255.464 400.8 230.264 392.4 210.664 375.6C191.464 358.8 181.864 337 181.864 310.2H252.064C252.064 318.2 255.064 324.8 261.064 330C267.064 335.2 275.064 337.8 285.064 337.8C294.664 337.8 302.464 335 308.464 329.4C314.864 323.8 318.064 316.6 318.064 307.8C318.064 299.8 315.264 293.2 309.664 288C304.064 282.8 296.864 280.2 288.064 280.2H250.864V218.4H288.064C294.864 218.4 300.664 216 305.464 211.2C310.264 206.4 312.664 200.4 312.664 193.2C312.664 184.8 310.064 178.2 304.864 173.4C299.664 168.6 293.064 166.2 285.064 166.2C277.864 166.2 271.664 168.4 266.464 172.8C261.664 177.2 259.264 182.8 259.264 189.6H192.664C192.664 164.8 201.464 144.6 219.064 129C236.664 113 259.264 105 286.864 105C314.464 105 336.864 112.2 354.064 126.6C371.664 141 380.464 160 380.464 183.6C380.464 200.8 375.864 214.8 366.664 225.6C357.464 236 345.664 243.2 331.264 247.2C348.464 252 362.064 260.2 372.064 271.8C382.464 283.4 387.664 298 387.664 315.6C387.664 340.4 378.264 360.8 359.464 376.8C340.664 392.8 316.264 400.8 286.264 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-3-mask)"
-                                    />
-                                    <path
-                                        d="M78.2 167.6H53V105.2H146V400.2H78.2V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-3-mask)"
-                                    />
-                                </g>
+    // draw the thread as you scroll (no React re-render on scroll)
+    useEffect(() => {
+        const box = wrap.current;
+        const p = path.current;
+        const n = needle.current;
+        if (!geo || !box || !p || !n) return;
 
-                                <g className="text-[#F3BEC7] opacity-100 mix-blend-multiply transition-all delay-400 duration-750 dark:text-[#733000] dark:mix-blend-normal starting:opacity-0 motion-safe:starting:-translate-x-[78px]">
-                                    <mask
-                                        id="path-4-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="76.6643"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="76.6643"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M311.929 400.8C281.129 400.8 255.929 392.4 236.329 375.6C217.129 358.8 207.529 337 207.529 310.2H277.729C277.729 318.2 280.729 324.8 286.729 330C292.729 335.2 300.729 337.8 310.729 337.8C320.329 337.8 328.129 335 334.129 329.4C340.529 323.8 343.729 316.6 343.729 307.8C343.729 299.8 340.929 293.2 335.329 288C329.729 282.8 322.529 280.2 313.729 280.2H276.529V218.4H313.729C320.529 218.4 326.329 216 331.129 211.2C335.929 206.4 338.329 200.4 338.329 193.2C338.329 184.8 335.729 178.2 330.529 173.4C325.329 168.6 318.729 166.2 310.729 166.2C303.529 166.2 297.329 168.4 292.129 172.8C287.329 177.2 284.929 182.8 284.929 189.6H218.329C218.329 164.8 227.129 144.6 244.729 129C262.329 113 284.929 105 312.529 105C340.129 105 362.529 112.2 379.729 126.6C397.329 141 406.129 160 406.129 183.6C406.129 200.8 401.529 214.8 392.329 225.6C383.129 236 371.329 243.2 356.929 247.2C374.129 252 387.729 260.2 397.729 271.8C408.129 283.4 413.329 298 413.329 315.6C413.329 340.4 403.929 360.8 385.129 376.8C366.329 392.8 341.929 400.8 311.929 400.8Z" />
-                                        <path d="M103.864 167.6H78.6643V105.2H171.664V400.2H103.864V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M311.929 400.8C281.129 400.8 255.929 392.4 236.329 375.6C217.129 358.8 207.529 337 207.529 310.2H277.729C277.729 318.2 280.729 324.8 286.729 330C292.729 335.2 300.729 337.8 310.729 337.8C320.329 337.8 328.129 335 334.129 329.4C340.529 323.8 343.729 316.6 343.729 307.8C343.729 299.8 340.929 293.2 335.329 288C329.729 282.8 322.529 280.2 313.729 280.2H276.529V218.4H313.729C320.529 218.4 326.329 216 331.129 211.2C335.929 206.4 338.329 200.4 338.329 193.2C338.329 184.8 335.729 178.2 330.529 173.4C325.329 168.6 318.729 166.2 310.729 166.2C303.529 166.2 297.329 168.4 292.129 172.8C287.329 177.2 284.929 182.8 284.929 189.6H218.329C218.329 164.8 227.129 144.6 244.729 129C262.329 113 284.929 105 312.529 105C340.129 105 362.529 112.2 379.729 126.6C397.329 141 406.129 160 406.129 183.6C406.129 200.8 401.529 214.8 392.329 225.6C383.129 236 371.329 243.2 356.929 247.2C374.129 252 387.729 260.2 397.729 271.8C408.129 283.4 413.329 298 413.329 315.6C413.329 340.4 403.929 360.8 385.129 376.8C366.329 392.8 341.929 400.8 311.929 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M103.864 167.6H78.6643V105.2H171.664V400.2H103.864V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M311.929 400.8C281.129 400.8 255.929 392.4 236.329 375.6C217.129 358.8 207.529 337 207.529 310.2H277.729C277.729 318.2 280.729 324.8 286.729 330C292.729 335.2 300.729 337.8 310.729 337.8C320.329 337.8 328.129 335 334.129 329.4C340.529 323.8 343.729 316.6 343.729 307.8C343.729 299.8 340.929 293.2 335.329 288C329.729 282.8 322.529 280.2 313.729 280.2H276.529V218.4H313.729C320.529 218.4 326.329 216 331.129 211.2C335.929 206.4 338.329 200.4 338.329 193.2C338.329 184.8 335.729 178.2 330.529 173.4C325.329 168.6 318.729 166.2 310.729 166.2C303.529 166.2 297.329 168.4 292.129 172.8C287.329 177.2 284.929 182.8 284.929 189.6H218.329C218.329 164.8 227.129 144.6 244.729 129C262.329 113 284.929 105 312.529 105C340.129 105 362.529 112.2 379.729 126.6C397.329 141 406.129 160 406.129 183.6C406.129 200.8 401.529 214.8 392.329 225.6C383.129 236 371.329 243.2 356.929 247.2C374.129 252 387.729 260.2 397.729 271.8C408.129 283.4 413.329 298 413.329 315.6C413.329 340.4 403.929 360.8 385.129 376.8C366.329 392.8 341.929 400.8 311.929 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-4-mask)"
-                                    />
-                                    <path
-                                        d="M103.864 167.6H78.6643V105.2H171.664V400.2H103.864V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-4-mask)"
-                                    />
-                                </g>
+        const L = p.getTotalLength();
+        const N = 240;
+        const ys = Array.from({ length: N + 1 }, (_, i) => p.getPointAtLength((L * i) / N).y);
 
-                                <g className="text-[#F3BEC7] opacity-100 mix-blend-hard-light transition-all delay-400 duration-750 dark:text-[#4B0600] starting:opacity-0 motion-safe:starting:-translate-x-[102px]">
-                                    <mask
-                                        id="path-5-mask"
-                                        maskUnits="userSpaceOnUse"
-                                        x="102.329"
-                                        y="103"
-                                        width="338"
-                                        height="299"
-                                        fill="black"
-                                    >
-                                        <rect
-                                            fill="white"
-                                            x="102.329"
-                                            y="103"
-                                            width="338"
-                                            height="299"
-                                        />
-                                        <path d="M337.593 400.8C306.793 400.8 281.593 392.4 261.993 375.6C242.793 358.8 233.193 337 233.193 310.2H303.393C303.393 318.2 306.393 324.8 312.393 330C318.393 335.2 326.393 337.8 336.393 337.8C345.993 337.8 353.793 335 359.793 329.4C366.193 323.8 369.393 316.6 369.393 307.8C369.393 299.8 366.593 293.2 360.993 288C355.393 282.8 348.193 280.2 339.393 280.2H302.193V218.4H339.393C346.193 218.4 351.993 216 356.793 211.2C361.593 206.4 363.993 200.4 363.993 193.2C363.993 184.8 361.393 178.2 356.193 173.4C350.993 168.6 344.393 166.2 336.393 166.2C329.193 166.2 322.993 168.4 317.793 172.8C312.993 177.2 310.593 182.8 310.593 189.6H243.993C243.993 164.8 252.793 144.6 270.393 129C287.993 113 310.593 105 338.193 105C365.793 105 388.193 112.2 405.393 126.6C422.993 141 431.793 160 431.793 183.6C431.793 200.8 427.193 214.8 417.993 225.6C408.793 236 396.993 243.2 382.593 247.2C399.793 252 413.393 260.2 423.393 271.8C433.793 283.4 438.993 298 438.993 315.6C438.993 340.4 429.593 360.8 410.793 376.8C391.993 392.8 367.593 400.8 337.593 400.8Z" />
-                                        <path d="M129.529 167.6H104.329V105.2H197.329V400.2H129.529V167.6Z" />
-                                    </mask>
-                                    <path
-                                        d="M337.593 400.8C306.793 400.8 281.593 392.4 261.993 375.6C242.793 358.8 233.193 337 233.193 310.2H303.393C303.393 318.2 306.393 324.8 312.393 330C318.393 335.2 326.393 337.8 336.393 337.8C345.993 337.8 353.793 335 359.793 329.4C366.193 323.8 369.393 316.6 369.393 307.8C369.393 299.8 366.593 293.2 360.993 288C355.393 282.8 348.193 280.2 339.393 280.2H302.193V218.4H339.393C346.193 218.4 351.993 216 356.793 211.2C361.593 206.4 363.993 200.4 363.993 193.2C363.993 184.8 361.393 178.2 356.193 173.4C350.993 168.6 344.393 166.2 336.393 166.2C329.193 166.2 322.993 168.4 317.793 172.8C312.993 177.2 310.593 182.8 310.593 189.6H243.993C243.993 164.8 252.793 144.6 270.393 129C287.993 113 310.593 105 338.193 105C365.793 105 388.193 112.2 405.393 126.6C422.993 141 431.793 160 431.793 183.6C431.793 200.8 427.193 214.8 417.993 225.6C408.793 236 396.993 243.2 382.593 247.2C399.793 252 413.393 260.2 423.393 271.8C433.793 283.4 438.993 298 438.993 315.6C438.993 340.4 429.593 360.8 410.793 376.8C391.993 392.8 367.593 400.8 337.593 400.8Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M129.529 167.6H104.329V105.2H197.329V400.2H129.529V167.6Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M337.593 400.8C306.793 400.8 281.593 392.4 261.993 375.6C242.793 358.8 233.193 337 233.193 310.2H303.393C303.393 318.2 306.393 324.8 312.393 330C318.393 335.2 326.393 337.8 336.393 337.8C345.993 337.8 353.793 335 359.793 329.4C366.193 323.8 369.393 316.6 369.393 307.8C369.393 299.8 366.593 293.2 360.993 288C355.393 282.8 348.193 280.2 339.393 280.2H302.193V218.4H339.393C346.193 218.4 351.993 216 356.793 211.2C361.593 206.4 363.993 200.4 363.993 193.2C363.993 184.8 361.393 178.2 356.193 173.4C350.993 168.6 344.393 166.2 336.393 166.2C329.193 166.2 322.993 168.4 317.793 172.8C312.993 177.2 310.593 182.8 310.593 189.6H243.993C243.993 164.8 252.793 144.6 270.393 129C287.993 113 310.593 105 338.193 105C365.793 105 388.193 112.2 405.393 126.6C422.993 141 431.793 160 431.793 183.6C431.793 200.8 427.193 214.8 417.993 225.6C408.793 236 396.993 243.2 382.593 247.2C399.793 252 413.393 260.2 423.393 271.8C433.793 283.4 438.993 298 438.993 315.6C438.993 340.4 429.593 360.8 410.793 376.8C391.993 392.8 367.593 400.8 337.593 400.8Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-5-mask)"
-                                    />
-                                    <path
-                                        d="M129.529 167.6H104.329V105.2H197.329V400.2H129.529V167.6Z"
-                                        stroke="var(--stroke-color)"
-                                        strokeWidth="2.4"
-                                        mask="url(#path-5-mask)"
-                                    />
-                                </g>
-                            </svg>
-                            <div className="absolute inset-0 rounded-t-lg shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-t-none lg:rounded-r-lg dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"></div>
-                        </div>
-                    </main>
-                </div>
-                <div className="hidden h-14.5 lg:block"></div>
+        const draw = (f: number) => {
+            p.style.strokeDasharray = `${L}`;
+            p.style.strokeDashoffset = `${L * (1 - f)}`;
+            const pt = p.getPointAtLength(L * f);
+            n.setAttribute('transform', `translate(${pt.x} ${pt.y})`);
+            n.style.opacity = f > 0.002 ? '1' : '0';
+        };
+
+        // reduced motion: show the finished thread, no animation
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            draw(1);
+            return;
+        }
+
+        const update = () => {
+            // needle normally sits ~66% down the viewport, but slides toward the page bottom
+            // as you near the end, so the thread finishes its last stretch smoothly
+            const rect = box.getBoundingClientRect();
+            const scrolled = window.scrollY + window.innerHeight;
+            const total = document.documentElement.scrollHeight;
+            const remain = Math.max(0, total - scrolled); // px left until page bottom
+            const easeZone = window.innerHeight * 2;       // last two viewport-heights of scroll
+            const t = 1 - Math.min(1, remain / easeZone);  // 0 far from bottom, 1 at bottom
+            const refLine = window.innerHeight * (0.66 + 0.34 * t);
+            const y = refLine - rect.top;
+
+            let lo = 0;
+            let hi = N;
+            while (lo < hi) {
+                const mid = (lo + hi) >> 1;
+                if (ys[mid] < y) lo = mid + 1;
+                else hi = mid;
+            }
+            const i = Math.max(1, lo);
+            const a = ys[i - 1];
+            const b = ys[i];
+            const f = (i - 1 + (b > a ? (y - a) / (b - a) : 0)) / N;
+            draw(Math.max(0, Math.min(1, f)));
+        };
+
+        let raf = 0;
+        const onScroll = () => {
+            if (!raf) {
+                raf = requestAnimationFrame(() => {
+                    raf = 0;
+                    update();
+                });
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        update();
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('scroll', onScroll);
+        };
+    }, [geo, wrap]);
+
+    if (!geo) return null;
+    return (
+        <svg className="pointer-events-none absolute left-0 top-0 z-0" width={geo.w} height={geo.h} viewBox={`0 0 ${geo.w} ${geo.h}`} aria-hidden="true">
+            {/* the whole route as faint stitch holes */}
+            <path d={geo.d} fill="none" stroke="#F7F1E8" strokeOpacity="0.16" strokeWidth="1.5" strokeDasharray="2 9" strokeLinecap="round" />
+            {/* the thread itself */}
+            <path ref={path} d={geo.d} fill="none" stroke="#F0A98B" strokeWidth="2" strokeLinecap="round" style={{ strokeDasharray: 100000, strokeDashoffset: 100000 }} />
+            {/* the needle */}
+            <g ref={needle} style={{ opacity: 0 }}>
+                <circle className="sew-pulse" r="7" fill="#F0A98B" />
+                <circle r="4.5" fill="#F0A98B" />
+                <circle r="1.8" fill="#0F1E2B" />
+            </g>
+        </svg>
+    );
+});
+
+// soft glows, fine grain and slow-drifting lint behind everything below the hero
+const SPECKS = Array.from({ length: 16 }, (_, i) => ({
+    left: (i * 37 + 11) % 100,
+    size: 2 + (i % 3),
+    dur: 26 + ((i * 7) % 18),
+    delay: -((i * 5) % 30),
+    dx: ((i % 2) * 2 - 1) * (14 + (i % 4) * 6),
+    o: 0.22 + (i % 3) * 0.1,
+    c: i % 3 === 0 ? '#A9D3E6' : '#F7F1E8',
+}));
+
+const SewBackdrop = memo(function SewBackdrop({ progress = 0 }: { progress?: number }) {
+    return (
+        <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+            {/* soft ambient vignette — same palette, adds depth so the bg stops reading flat */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    background:
+                        'radial-gradient(1200px 800px at 15% 10%, rgba(92,140,168,0.10), transparent 60%),' +
+                        'radial-gradient(900px 700px at 85% 85%, rgba(240,169,139,0.06), transparent 60%),' +
+                        'radial-gradient(1400px 1000px at 50% 50%, rgba(15,30,43,0), rgba(9,18,26,0.35) 100%)',
+                }}
+            />
+            {/* fine film grain — data-URI noise, no image file needed */}
+            <div
+                className="absolute inset-0 opacity-[0.05] mix-blend-overlay"
+                style={{
+                    backgroundImage:
+                        "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+                    backgroundSize: '180px 180px',
+                }}
+            />
+            {/* very faint diagonal weave — reads as woven fabric, nearly invisible */}
+            <div
+                className="absolute inset-0 opacity-[0.035]"
+                style={{
+                    backgroundImage:
+                        'repeating-linear-gradient(45deg, #F7F1E8 0 1px, transparent 1px 3px),' +
+                        'repeating-linear-gradient(-45deg, #F7F1E8 0 1px, transparent 1px 3px)',
+                }}
+            />
+            {/* ambient light that drifts with scroll position */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    background: `radial-gradient(700px 500px at ${20 + (progress % 60)}% ${10 + (progress * 0.6) % 70}%, rgba(169,211,230,0.06), transparent 60%)`,
+                }}
+            />
+            <div className="sew-glow absolute inset-0" />
+            <div className="sew-grain absolute inset-0" />
+            {/* fixed so the lint drifts across the viewport, not trapped in the wrapper box */}
+            <div className="fixed inset-0 overflow-hidden">
+                {SPECKS.map((s, i) => (
+                    <span
+                        key={i}
+                        className="sew-speck"
+                        style={{ left: `${s.left}%`, width: s.size, height: s.size, background: s.c, '--d': `${s.dur}s`, '--delay': `${s.delay}s`, '--dx': `${s.dx}px`, '--o': s.o } as CSSProperties}
+                    />
+                ))}
             </div>
-        </>
+        </div>
+    );
+});
+
+
+export default function Welcome({ services }: { services: any[] }) {
+    const { auth }: any = usePage().props;
+    const start = auth?.user ? '/dashboard' : '/register';
+
+    // pull the services straight from the DB so admin edits show up here
+    const shown = services.length > 0 ? services : LANDING_SERVICES;
+    const first = shown[0];
+    const tagName = first ? first.name : 'Regular clothes';
+    const tagTotal = first ? String(first.price) : '180';
+
+    const [activeStep, setActiveStep] = useState(0);
+    const [scrollY, setScrollY] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const sew = useRef<HTMLDivElement>(null);
+
+    // scroll position for progress line and parallax
+    useEffect(() => {
+        const onScroll = () => {
+            const h = document.documentElement.scrollHeight - window.innerHeight;
+            setScrollY(window.scrollY);
+            setProgress(h > 0 ? (window.scrollY / h) * 100 : 0);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    // which step is in the middle of the screen
+    useEffect(() => {
+        const els = document.querySelectorAll('[data-step]');
+        const io = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((e) => {
+                    if (e.isIntersecting) setActiveStep(Number(e.target.getAttribute('data-step')));
+                });
+            },
+            { rootMargin: '-45% 0px -45% 0px' },
+        );
+        els.forEach((el) => io.observe(el));
+        return () => io.disconnect();
+    }, []);
+
+    return (
+        <Shell bare>
+            {/* scroll progress line */}
+            <div className="fixed left-0 top-0 z-50 h-0.5 bg-[#F0A98B]" style={{ width: `${progress}%` }} />
+
+            {/* HERO — illustration behind, a clothesline of laundry on the right, three promises along the bottom */}
+            <section
+                className="relative flex min-h-[88vh] flex-col overflow-hidden px-6 pb-10 pt-20 md:pt-28"
+                style={{
+                    backgroundImage: `url(${HERO_IMG})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                }}
+            >
+                {/* dark overlay so text stays readable */}
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background:
+                            'linear-gradient(to right, rgba(15,30,43,0.92) 0%, rgba(15,30,43,0.75) 50%, rgba(15,30,43,0.55) 100%)',
+                    }}
+                />
+
+                {/* soft accent glow */}
+                <div className="float pointer-events-none absolute -left-32 top-0 h-96 w-96 rounded-full bg-[#5C8CA8]/25 blur-3xl" />
+
+                <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-between gap-16">
+                    <div className="grid items-start gap-10 md:grid-cols-[1.2fr_1fr]">
+                        <div style={{ opacity: Math.max(0, 1 - scrollY / 500), transform: `translateY(${scrollY * 0.2}px)` }}>
+                            <p className="rise text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">{SHOP.name}</p>
+                            <h1 className="rise mt-6 font-serif text-6xl leading-[1.05] text-[#F7F1E8] md:text-8xl" style={{ animationDelay: '.1s' }}>
+                                Fresh, folded,<br />
+                                <span className="italic text-[#F0A98B]">finished.</span>
+                            </h1>
+                            <p className="rise mt-8 max-w-sm text-[#F7F1E8]/60" style={{ animationDelay: '.25s' }}>
+                                Kaya kong tanggalin ang mantsa, pero hindi ang alaala niya sa'yo.
+                            </p>
+                            <Link
+                                href={start}
+                                className="rise group mt-10 inline-flex items-center gap-3 border-b border-[#F7F1E8]/40 pb-1 text-lg text-[#F7F1E8] transition hover:border-[#F0A98B] hover:text-[#F0A98B]"
+                                style={{ animationDelay: '.4s' }}
+                            >
+                                {auth?.user ? 'Go to dashboard' : 'Start an order'}
+                                <span className="transition group-hover:translate-x-2">→</span>
+                            </Link>
+                        </div>
+
+                        <div className="rise md:pt-6" style={{ animationDelay: '.5s' }}>
+                            <HeroLine />
+                        </div>
+                    </div>
+
+                    <ul className="rise grid gap-6 border-t border-[#F7F1E8]/20 pt-6 md:grid-cols-3" style={{ animationDelay: '.55s' }}>
+                        <li>
+                            <p className="font-serif text-xl text-[#F7F1E8]">
+                                Fixed <span className="italic text-[#F0A98B]">per-load</span>
+                            </p>
+                            <p className="mt-1 text-sm text-[#F7F1E8]/60">₱180 for up to 8kg of regular clothes.</p>
+                        </li>
+                        <li>
+                            <p className="font-serif text-xl text-[#F7F1E8]">
+                                Track every <span className="italic text-[#F0A98B]">step</span>
+                            </p>
+                            <p className="mt-1 text-sm text-[#F7F1E8]/60">From pending to ready, right on your phone.</p>
+                        </li>
+                        <li>
+                            <p className="font-serif text-xl text-[#F7F1E8]">
+                                Pickup & <span className="italic text-[#F0A98B]">delivery</span>
+                            </p>
+                            <p className="mt-1 text-sm text-[#F7F1E8]/60">From ₱20 depending on distance.</p>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <div ref={sew} className="relative isolate overflow-x-clip">
+                <SewBackdrop progress={progress} />
+                <SewThread wrap={sew} />
+
+                {/* HOW IT WORKS: sticky tag follows the steps */}
+                <section id="features" className="relative scroll-mt-24 px-6 py-24">
+                    {/* soft halo behind the heading */}
+                    <div
+                        className="pointer-events-none absolute left-1/2 top-24 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-3xl"
+                        style={{ background: 'radial-gradient(closest-side, rgba(169,211,230,0.08), transparent)' }}
+                        aria-hidden="true"
+                    />
+                    <div className="relative mx-auto grid max-w-6xl gap-10 md:grid-cols-2">
+                        <div className="md:sticky md:top-20 md:h-[80vh] md:self-start">
+                            <Reveal>
+                                <p className="text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">How it works</p>
+                                <h2 className="mt-4 font-serif text-5xl text-[#F7F1E8] md:text-6xl">
+                                    Follow your <span className="italic text-[#F0A98B]">tag.</span>
+                                </h2>
+                            </Reveal>
+                            <div className="relative mt-6 flex justify-center md:justify-start md:pl-10">
+                                <div className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F0A98B]/10 blur-3xl md:left-[calc(2.5rem+8rem)]" />
+                                <div className="swing">
+                                    <Tag step={activeStep} name={tagName} total={tagTotal} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            {steps.map(([n, title, text], i) => (
+                                <div key={n} data-step={i} className="flex min-h-[70vh] items-center">
+                                    <Reveal>
+                                        <div className={`border-t pt-6 transition-colors duration-500 ${i === activeStep ? 'border-[#F0A98B]' : 'border-[#F7F1E8]/20'}`}>
+                                            <p className="text-xs tracking-widest text-[#A9D3E6]">{n}</p>
+                                            <h3 className="mt-3 font-serif text-4xl text-[#F7F1E8]">{title}</h3>
+                                            <p className="mt-3 max-w-sm text-[#F7F1E8]/60">{text}</p>
+                                        </div>
+                                    </Reveal>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* PRICING: clothesline — 4 real Phinewash tiers */}
+                <section id="pricing" className="relative scroll-mt-24 px-6 py-24">
+                    {/* soft peach halo behind the heading */}
+                    <div
+                        className="pointer-events-none absolute left-1/2 top-24 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-3xl"
+                        style={{ background: 'radial-gradient(closest-side, rgba(240,169,139,0.08), transparent)' }}
+                        aria-hidden="true"
+                    />
+                    <div className="relative mx-auto max-w-6xl">
+                        <Reveal className="text-center">
+                            <p className="text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">Price list</p>
+                            <h2 className="mt-4 font-serif text-5xl text-[#F7F1E8] md:text-6xl">
+                                Simple, <span className="italic text-[#F0A98B]">honest</span> prices.
+                            </h2>
+                            <p className="mt-3 text-[#F7F1E8]/60">
+                                Fixed per load or per piece — you always see your total before you place an order.
+                            </p>
+                        </Reveal>
+
+                        <div className="relative mt-20">
+                            <div className="absolute left-0 right-0 top-0 h-0.5 bg-[#F7F1E8]/40" />
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-16 md:grid-cols-4">
+                                {shown.map((s, i) => (
+                                    <Drop key={s.id} delay={i * 180}>
+                                        <div className="swing flex flex-col items-center" style={{ animationDuration: `${4 + i}s`, animationDelay: `${i * 0.4}s` }}>
+                                            <div className="z-10 -mb-3 h-8 w-3 rounded-sm bg-[#F0A98B]" />
+                                            <div className={`w-full max-w-[220px] rounded-2xl px-5 pb-6 pt-8 text-center text-[#0F1E2B] shadow-xl transition duration-300 hover:scale-105 ${i === 0 ? 'bg-[#F0A98B]' : 'bg-[#F7F1E8]'}`}>
+                                                <div className="mx-auto mb-4 h-3 w-3 rounded-full border-2 border-[#0F1E2B]/40" />
+                                                <p className="text-[10px] uppercase tracking-[0.25em] text-[#0F1E2B]/60">{i === 0 ? 'Most popular' : 'Service'}</p>
+                                                <p className="mt-2 text-sm font-semibold">{s.name}</p>
+                                                <p className="mt-3 font-serif text-5xl">₱{s.price}</p>
+                                                <p className="text-xs text-[#0F1E2B]/60">{s.unit}</p>
+                                                <p className="mt-2 text-[11px] text-[#0F1E2B]/50">{s.note}</p>
+                                                <Link href={start} className="mt-5 block border-t border-dashed border-[#0F1E2B]/30 pt-3 text-xs font-semibold uppercase tracking-widest hover:underline">
+                                                    Order →
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </Drop>
+                                ))}
+                            </div>
+                        </div>
+
+                        <Reveal>
+                            <p className="mt-14 text-center text-sm text-[#F7F1E8]/60">
+                                Comforters are washed separately because of their weight.{' '}
+                                {SHOP.pickupNote}
+                            </p>
+                        </Reveal>
+                    </div>
+                </section>
+
+                {/* FIND US */}
+                <section id="find-us" className="relative scroll-mt-24 px-6 py-24">
+                    <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-12 md:grid-cols-2">
+                        <Reveal>
+                            <p className="text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">Find us</p>
+                            <h2 className="mt-3 font-serif text-5xl text-[#F7F1E8] md:text-6xl">
+                                Drop by <span className="italic text-[#F0A98B]">the shop</span>
+                            </h2>
+                            <dl className="mt-8 space-y-5 text-[#F7F1E8]">
+                                <div>
+                                    <dt className="text-xs uppercase tracking-[0.25em] text-[#A9D3E6]/70">Address</dt>
+                                    <dd className="mt-1">{SHOP.address}</dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs uppercase tracking-[0.25em] text-[#A9D3E6]/70">Hours</dt>
+                                    <dd className="mt-1">{SHOP.hours}</dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs uppercase tracking-[0.25em] text-[#A9D3E6]/70">Phone</dt>
+                                    <dd className="mt-1"><a href={`tel:${SHOP.phone.replace(/\s/g, '')}`} className="hover:text-[#F0A98B]">{SHOP.phone}</a></dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs uppercase tracking-[0.25em] text-[#A9D3E6]/70">Pickup & delivery</dt>
+                                    <dd className="mt-1">{SHOP.pickupNote}</dd>
+                                </div>
+                            </dl>
+                            <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SHOP.mapQuery)}`}
+                                target="_blank" rel="noopener noreferrer"
+                                className="mt-8 inline-block rounded-full bg-[#F7F1E8] px-8 py-4 font-semibold text-[#0F1E2B] shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-[#F0A98B]"
+                            >
+                                Get directions
+                            </a>
+                        </Reveal>
+
+                        <Reveal>
+                            <div className="relative z-10 flex flex-col items-center">
+                                <div className="z-10 -mb-3 h-8 w-3 rounded-sm bg-[#F0A98B]" />
+                                <div className="w-full max-w-sm rounded-3xl bg-[#F7F1E8] p-6 pt-8 text-[#0F1E2B] shadow-2xl shadow-black/40">
+                                    <div className="mx-auto mb-4 h-3 w-3 rounded-full border-2 border-[#0F1E2B]/40" />
+                                    <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-[#0F1E2B]/15 bg-[#EFE7D8]">
+                                        {/* default Google map — natural colors, native pin, Google's own "Open in Maps" chip */}
+                                        <iframe
+                                            title={`${SHOP.name} location`}
+                                            src={`https://maps.google.com/maps?q=${encodeURIComponent(SHOP.mapQuery)}&z=16&output=embed`}
+                                            className="absolute inset-0 h-full w-full"
+                                            style={{ border: 0, filter: 'saturate(0.72) brightness(0.96) contrast(0.98)' }}
+                                            loading="lazy"
+                                            allowFullScreen
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                        />
+                                        {/* warm cream wash — just enough to tie the map into the tag's palette */}
+                                        <div
+                                            className="pointer-events-none absolute inset-0 mix-blend-multiply"
+                                            style={{ background: 'linear-gradient(180deg, rgba(247,241,232,0.18), rgba(240,169,139,0.08))' }}
+                                            aria-hidden="true"
+                                        />
+                                        {/* soft inner ring so the map reads as framed inside the tag */}
+                                        <div
+                                            className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-[#0F1E2B]/10"
+                                            aria-hidden="true"
+                                        />
+                                    </div>
+                                    <p className="mt-4 text-xs uppercase tracking-[0.3em] text-[#0F1E2B]/60">{SHOP.name}</p>
+                                    <p className="mt-1 text-sm text-[#0F1E2B]/70">Visit us in Poblacion, Anahawan.</p>
+                                </div>
+                            </div>
+                        </Reveal>
+                    </div>
+                </section>
+
+                {/* CTA */}
+                <section id="about" className="relative scroll-mt-24 px-6 py-28 text-center">
+                    {/* soft warm halo behind the closing headline */}
+                    <div
+                        className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+                        style={{ background: 'radial-gradient(closest-side, rgba(240,169,139,0.10), transparent)' }}
+                        aria-hidden="true"
+                    />
+                    <Reveal>
+                        <h2 className="relative mx-auto max-w-2xl font-serif text-5xl leading-tight text-[#F7F1E8] md:text-7xl">
+                            Clean clothes, <span className="italic text-[#F0A98B]">zero fuss.</span>
+                        </h2>
+                        <p className="relative mx-auto mt-4 max-w-sm text-[#F7F1E8]/60">Book online in a minute and follow your laundry all the way to pickup.</p>
+                        <Link href={start} className="relative mt-10 inline-block rounded-full bg-[#F7F1E8] px-8 py-4 font-semibold text-[#0F1E2B] transition hover:-translate-y-0.5 hover:bg-[#F0A98B]">
+                            Place your first order
+                        </Link>
+                    </Reveal>
+                </section>
+
+                <footer className="border-t border-[#F7F1E8]/10 px-6 py-8 text-center text-xs text-[#F7F1E8]/40">
+                    © 2026 {SHOP.name} · Wash, Dry & Fold · Pickup and delivery available
+                </footer>
+            </div>
+        </Shell>
     );
 }
