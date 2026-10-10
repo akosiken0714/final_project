@@ -34,13 +34,13 @@ class SavedOrderController extends Controller
 
         if (! SavedOrder::named($user, $data['name']) && SavedOrder::countFor($user) >= SavedOrder::MAX_PER_USER) {
             throw ValidationException::withMessages([
-                'name' => 'You can keep up to ' . SavedOrder::MAX_PER_USER . ' saved orders. Delete one first, or reuse an existing name.',
+                'name' => 'You can keep up to '.SavedOrder::MAX_PER_USER.' saved orders. Delete one first, or reuse an existing name.',
             ]);
         }
 
         SavedOrder::remember($user, $data['name'], $data);
 
-        return back()->with('success', 'Saved as "' . trim($data['name']) . '".');
+        return back()->with('success', 'Saved as "'.trim($data['name']).'".');
     }
 
     public function destroy(Request $request, SavedOrder $savedOrder)

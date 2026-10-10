@@ -15,7 +15,7 @@ class CustomerController extends Controller
 
         $people = User::withCount('orders')
             ->when($search !== '', function ($q) use ($search) {
-                $like = '%' . str_replace(['%', '_'], '', $search) . '%';
+                $like = '%'.str_replace(['%', '_'], '', $search).'%';
                 $q->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('phone', 'like', $like));
             })
             ->orderByRaw("role = 'admin' desc")

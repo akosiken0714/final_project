@@ -16,9 +16,9 @@ class PhotoSanitizer
 
         $img = match ($mime) {
             'image/jpeg' => @imagecreatefromjpeg($path),
-            'image/png'  => @imagecreatefrompng($path),
+            'image/png' => @imagecreatefrompng($path),
             'image/webp' => @imagecreatefromwebp($path),
-            default      => false,
+            default => false,
         };
 
         if (! $img) {
@@ -50,7 +50,7 @@ class PhotoSanitizer
         $bytes = ob_get_clean();
         imagedestroy($img);
 
-        $storagePath = 'orders/' . Str::uuid() . '.jpg';
+        $storagePath = 'orders/'.Str::uuid().'.jpg';
         Storage::disk('local')->put($storagePath, $bytes);
 
         return $storagePath;

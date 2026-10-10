@@ -15,7 +15,7 @@ class Activity
 {
     public static function tag(int $orderId): string
     {
-        return '#' . str_pad((string) $orderId, 4, '0', STR_PAD_LEFT);
+        return '#'.str_pad((string) $orderId, 4, '0', STR_PAD_LEFT);
     }
 
     public static function log(string $event, string $summary, ?Order $order = null, ?int $actorId = null, array $meta = []): void
@@ -57,6 +57,6 @@ class Activity
 
     public static function money(float|int|string $n): string
     {
-        return '₱' . number_format((float) $n, 2);
+        return '₱'.number_format((float) $n, 2);
     }
 }

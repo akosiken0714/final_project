@@ -17,7 +17,7 @@ class DemoGcashGateway implements PaymentGateway
     public function charge(Order $order, array $details): PaymentResult
     {
         $number = preg_replace('/\D/', '', (string) ($details['gcash_number'] ?? ''));
-        $masked = strlen($number) === 11 ? substr($number, 0, 4) . '****' . substr($number, -3) : null;
+        $masked = strlen($number) === 11 ? substr($number, 0, 4).'****'.substr($number, -3) : null;
 
         if (! preg_match('/^09\d{9}$/', $number)) {
             return new PaymentResult(false, null, $masked, 'Enter a valid GCash number (09XXXXXXXXX).');
@@ -27,6 +27,6 @@ class DemoGcashGateway implements PaymentGateway
             return new PaymentResult(false, null, $masked, 'That code is not correct. Please try again.');
         }
 
-        return new PaymentResult(true, 'DEMO-' . strtoupper(Str::random(8)), $masked, 'Payment received (demo).');
+        return new PaymentResult(true, 'DEMO-'.strtoupper(Str::random(8)), $masked, 'Payment received (demo).');
     }
 }

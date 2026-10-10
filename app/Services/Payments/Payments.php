@@ -11,8 +11,8 @@ class Payments
     public static function gateway(): PaymentGateway
     {
         return match (config('laundry.payments.driver')) {
-            'demo' => new DemoGcashGateway(),
-            default => throw new RuntimeException('Unknown payment driver: ' . config('laundry.payments.driver')),
+            'demo' => new DemoGcashGateway,
+            default => throw new RuntimeException('Unknown payment driver: '.config('laundry.payments.driver')),
         };
     }
 

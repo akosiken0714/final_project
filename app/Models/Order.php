@@ -28,20 +28,27 @@ class Order extends Model
     // Where an order is in its life:
     //   ONGOING -> still being handled   READY -> washed, waiting to be claimed   CLAIMED -> picked up / delivered (the log)
     const ONGOING = ['Pending', 'In Progress'];
+
     const READY = 'Ready for Pickup';
+
     const CLAIMED = 'Completed';
 
     // How the laundry gets to and from the customer.
     const DELIVERY = 'delivery';   // we collect it and bring it back (delivery fee applies)
+
     const DROPOFF = 'dropoff';     // the customer brings it to the shop and collects it there
+
     const FULFILLMENTS = [self::DELIVERY, self::DROPOFF];
 
     // How the customer pays.
     const CASH = 'cash';
+
     const GCASH = 'gcash';
+
     const PAYMENT_METHODS = [self::CASH, self::GCASH];
 
     const UNPAID = 'unpaid';
+
     const PAID = 'paid';
 
     public function scopeOngoing($query)
@@ -111,7 +118,7 @@ class Order extends Model
             return;
         }
 
-        $reference = 'CASH-' . str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
+        $reference = 'CASH-'.str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
 
         $this->update(['payment_status' => self::PAID, 'paid_at' => now(), 'payment_reference' => $reference]);
 

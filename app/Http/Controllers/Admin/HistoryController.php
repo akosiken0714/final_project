@@ -87,7 +87,7 @@ class HistoryController extends Controller
             ->when($type === 'orders', fn ($x) => $x->where('event', 'like', 'order.%'))
             ->when($type === 'payments', fn ($x) => $x->where('event', 'like', 'payment.%'))
             ->when($type === 'admin', fn ($x) => $x->where(fn ($w) => $w->where('event', 'like', 'user.%')->orWhere('event', 'like', 'service.%')))
-            ->when($q !== '', fn ($x) => $x->where('summary', 'like', '%' . str_replace(['%', '_'], '', $q) . '%'))
+            ->when($q !== '', fn ($x) => $x->where('summary', 'like', '%'.str_replace(['%', '_'], '', $q).'%'))
             ->latest('created_at')->orderByDesc('id');
     }
 
@@ -96,6 +96,6 @@ class HistoryController extends Controller
     {
         $value = (string) $value;
 
-        return $value !== '' && str_contains("=+-@\t\r", $value[0]) ? "'" . $value : $value;
+        return $value !== '' && str_contains("=+-@\t\r", $value[0]) ? "'".$value : $value;
     }
 }

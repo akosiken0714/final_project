@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Models\SavedOrder;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -22,7 +23,7 @@ class LaundryTest extends TestCase
 
     private function service(bool $active = true): Service
     {
-        return Service::create(['name' => 'Wash ' . uniqid(), 'unit' => 'kg', 'price' => 45, 'active' => $active]);
+        return Service::create(['name' => 'Wash '.uniqid(), 'unit' => 'kg', 'price' => 45, 'active' => $active]);
     }
 
     private function payload(array $over = []): array
@@ -48,14 +49,14 @@ class LaundryTest extends TestCase
     }
 
     public function test_admin_without_2fa_is_sent_to_security_settings()
-{
-    // The 2FA rule only applies in production, so pretend we're in production here.
-    $this->app->detectEnvironment(fn () => 'production');
+    {
+        // The 2FA rule only applies in production, so pretend we're in production here.
+        $this->app->detectEnvironment(fn () => 'production');
 
-    $this->actingAs(User::factory()->create(['role' => 'admin']))
-        ->get('/admin')
-        ->assertRedirect('/settings/security');
-}
+        $this->actingAs(User::factory()->create(['role' => 'admin']))
+            ->get('/admin')
+            ->assertRedirect('/settings/security');
+    }
 
     public function test_admin_with_2fa_can_open_admin()
     {
@@ -156,8 +157,8 @@ class LaundryTest extends TestCase
     private function fillSavedList(User $user): void
     {
         $service = $this->service();
-        for ($i = 1; $i <= \App\Models\SavedOrder::MAX_PER_USER; $i++) {
-            \App\Models\SavedOrder::create([
+        for ($i = 1; $i <= SavedOrder::MAX_PER_USER; $i++) {
+            SavedOrder::create([
                 'user_id' => $user->id,
                 'name' => "Saved {$i}",
                 'service_id' => $service->id,
@@ -265,7 +266,7 @@ class LaundryTest extends TestCase
         $this->actingAs($owner)->post('/saved-orders', $this->savedPayload(['quantity' => 3]));
         $this->actingAs($owner)->post('/saved-orders', $this->savedPayload(['name' => 'WEEKLY WASH', 'quantity' => 5]))->assertSessionHasNoErrors();
 
-        $this->assertSame(1, \App\Models\SavedOrder::where('user_id', $owner->id)->count());
+        $this->assertSame(1, SavedOrder::where('user_id', $owner->id)->count());
         $this->assertDatabaseHas('saved_orders', ['user_id' => $owner->id, 'quantity' => 5]);
     }
 
@@ -285,7 +286,7 @@ class LaundryTest extends TestCase
         $this->actingAs($owner)->post('/saved-orders', $this->savedPayload(['name' => 'One too many']))->assertSessionHasErrors('name');
         $this->actingAs($owner)->post('/saved-orders', $this->savedPayload(['name' => 'Saved 1', 'quantity' => 9]))->assertSessionHasNoErrors();
 
-        $this->assertDatabaseCount('saved_orders', \App\Models\SavedOrder::MAX_PER_USER);
+        $this->assertDatabaseCount('saved_orders', SavedOrder::MAX_PER_USER);
         $this->assertDatabaseHas('saved_orders', ['user_id' => $owner->id, 'name' => 'Saved 1', 'quantity' => 9]);
     }
 
@@ -293,7 +294,7 @@ class LaundryTest extends TestCase
     {
         $owner = User::factory()->create();
         $this->actingAs($owner)->post('/saved-orders', $this->savedPayload());
-        $saved = \App\Models\SavedOrder::firstOrFail();
+        $saved = SavedOrder::firstOrFail();
 
         $this->actingAs(User::factory()->create())->delete("/saved-orders/{$saved->id}")->assertNotFound();
         $this->assertDatabaseCount('saved_orders', 1);

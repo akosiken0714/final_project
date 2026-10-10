@@ -30,7 +30,7 @@ class UserController extends Controller
             'admin_password' => ['required', 'current_password'],
         ], $this->phoneMessages() + ['admin_password.current_password' => 'Your admin password is not correct.'])->validate();
 
-        $user = new User();
+        $user = new User;
         $user->fill([
             'name' => $data['name'],
             'email' => $data['email'],

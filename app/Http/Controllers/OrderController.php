@@ -86,7 +86,7 @@ class OrderController extends Controller
 
         $tag = Activity::tag($order->id);
         $qty = rtrim(rtrim(number_format((float) $v['quantity'], 2, '.', ''), '0'), '.');
-        $how = ($delivery ? 'delivery' : 'drop-off') . ', ' . ($v['payment_method'] === 'gcash' ? 'GCash' : 'cash');
+        $how = ($delivery ? 'delivery' : 'drop-off').', '.($v['payment_method'] === 'gcash' ? 'GCash' : 'cash');
         Activity::log('order.placed', "Order {$tag} placed by {$user->name}: {$service->name} × {$qty} ({$how})", $order, $user->id);
         Activity::notifyAdmins("New order {$tag}", "{$user->name} · {$service->name} × {$qty}", '/admin', $order->id);
 

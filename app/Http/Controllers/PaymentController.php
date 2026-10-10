@@ -80,7 +80,7 @@ class PaymentController extends Controller
             throw ValidationException::withMessages(['code' => $result->message]);
         }
 
-        return redirect('/orders')->with('success', 'Payment received! Reference ' . $result->reference . '.');
+        return redirect('/orders')->with('success', 'Payment received! Reference '.$result->reference.'.');
     }
 
     // Only the customer who placed a GCash order can open its pay screen.

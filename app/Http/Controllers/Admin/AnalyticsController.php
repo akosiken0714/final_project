@@ -9,7 +9,6 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AnalyticsController extends Controller
@@ -64,6 +63,7 @@ class AnalyticsController extends Controller
                 if ($done) {
                     $prev['revenue'] += $total;
                 }
+
                 continue;
             }
 
@@ -126,7 +126,7 @@ class AnalyticsController extends Controller
     // Analytics now lives on the dashboard, so the old address just goes there.
     public function index(Request $request)
     {
-        return redirect('/admin' . ($request->query('range') ? '?range=' . $this->days($request) : ''));
+        return redirect('/admin'.($request->query('range') ? '?range='.$this->days($request) : ''));
     }
 
     public function export(Request $request): StreamedResponse
@@ -195,7 +195,7 @@ class AnalyticsController extends Controller
 
         return [
             'day' => self::DAY_NAMES[array_search(max($dayTotals), $dayTotals, true)],
-            'hour' => (($h % 12) ?: 12) . ($h < 12 ? ' AM' : ' PM'),
+            'hour' => (($h % 12) ?: 12).($h < 12 ? ' AM' : ' PM'),
         ];
     }
 
@@ -333,6 +333,6 @@ class AnalyticsController extends Controller
     {
         $value = (string) $value;
 
-        return $value !== '' && str_contains("=+-@\t\r", $value[0]) ? "'" . $value : $value;
+        return $value !== '' && str_contains("=+-@\t\r", $value[0]) ? "'".$value : $value;
     }
 }

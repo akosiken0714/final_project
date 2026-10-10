@@ -76,7 +76,7 @@ class StoreOrderRequest extends FormRequest
             }
 
             if (! SavedOrder::named($user, $name) && SavedOrder::countFor($user) >= SavedOrder::MAX_PER_USER) {
-                $v->errors()->add('save_as', 'You already have ' . SavedOrder::MAX_PER_USER . ' saved orders. Delete one first, or reuse an existing name.');
+                $v->errors()->add('save_as', 'You already have '.SavedOrder::MAX_PER_USER.' saved orders. Delete one first, or reuse an existing name.');
             }
         });
     }

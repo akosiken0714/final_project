@@ -62,7 +62,7 @@ class AvatarStore
         imagedestroy($img);
         imagedestroy($out);
 
-        $storagePath = 'avatars/' . Str::uuid() . '.jpg';
+        $storagePath = 'avatars/'.Str::uuid().'.jpg';
         Storage::disk('local')->put($storagePath, $bytes);
 
         return $storagePath;

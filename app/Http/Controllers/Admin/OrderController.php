@@ -68,7 +68,7 @@ class OrderController extends Controller
         Activity::log('order.status', "Order {$tag}: {$from} → {$to}", $order, $adminId, ['from' => $from, 'to' => $to]);
 
         if (! $wasPaid && $order->isPaid()) {
-            Activity::log('payment.cash', 'Cash ' . Activity::money($order->amount_due) . " received for order {$tag} (on claim)", $order, $adminId);
+            Activity::log('payment.cash', 'Cash '.Activity::money($order->amount_due)." received for order {$tag} (on claim)", $order, $adminId);
         }
 
         $message = match ($to) {
@@ -83,7 +83,7 @@ class OrderController extends Controller
             || ($to === Order::READY && $order->fulfillment === Order::DROPOFF);
         Activity::notifyUser($order->user, "Order {$tag} is now {$to}", $message, $finished ? '/orders?view=finished' : '/orders', $order->id);
 
-        return back()->with('success', 'Order #' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . " is now {$to}.");
+        return back()->with('success', 'Order #'.str_pad($order->id, 4, '0', STR_PAD_LEFT)." is now {$to}.");
     }
 
     // The admin collected the cash early (or wants to record it by hand).
@@ -98,10 +98,10 @@ class OrderController extends Controller
 
         if (! $wasPaid && $order->isPaid()) {
             $tag = Activity::tag($order->id);
-            Activity::log('payment.cash', 'Cash ' . Activity::money($order->amount_due) . " received for order {$tag}", $order, $request->user()->id);
-            Activity::notifyUser($order->user, "Payment recorded for {$tag}", 'We received your cash payment of ' . Activity::money($order->amount_due) . '.', '/orders', $order->id);
+            Activity::log('payment.cash', 'Cash '.Activity::money($order->amount_due)." received for order {$tag}", $order, $request->user()->id);
+            Activity::notifyUser($order->user, "Payment recorded for {$tag}", 'We received your cash payment of '.Activity::money($order->amount_due).'.', '/orders', $order->id);
         }
 
-        return back()->with('success', 'Order #' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . ' marked as paid.');
+        return back()->with('success', 'Order #'.str_pad($order->id, 4, '0', STR_PAD_LEFT).' marked as paid.');
     }
 }

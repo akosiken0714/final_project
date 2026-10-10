@@ -54,7 +54,7 @@ class ProfileUpdateTest extends TestCase
             ->patch(route('profile.update'), [
                 'name' => 'Test User',
                 'email' => $user->email,
-                'phone' => '09123456789'
+                'phone' => '09123456789',
             ]);
 
         $response

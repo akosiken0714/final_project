@@ -18,7 +18,7 @@ class ServiceController extends Controller
     public function store(ServiceRequest $request)
     {
         $service = Service::create($request->validated());
-        Activity::log('service.created', "Service added: {$service->name} (" . Activity::money($service->price) . ')');
+        Activity::log('service.created', "Service added: {$service->name} (".Activity::money($service->price).')');
 
         return back();
     }
@@ -26,7 +26,7 @@ class ServiceController extends Controller
     public function update(ServiceRequest $request, Service $service)
     {
         $service->update($request->validated());
-        Activity::log('service.updated', "Service updated: {$service->name} (" . Activity::money($service->price) . ')');
+        Activity::log('service.updated', "Service updated: {$service->name} (".Activity::money($service->price).')');
 
         return back();
     }

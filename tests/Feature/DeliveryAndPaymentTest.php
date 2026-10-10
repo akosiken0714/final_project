@@ -22,7 +22,7 @@ class DeliveryAndPaymentTest extends TestCase
 
     private function service(): Service
     {
-        return Service::create(['name' => 'Wash ' . uniqid(), 'unit' => 'kg', 'price' => 45, 'active' => true]);
+        return Service::create(['name' => 'Wash '.uniqid(), 'unit' => 'kg', 'price' => 45, 'active' => true]);
     }
 
     // An order form. Pass lat/lng offsets in degrees of latitude: 0.009 is roughly 1 km.

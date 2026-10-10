@@ -30,7 +30,7 @@ class ProfileAndUsersTest extends TestCase
         $user->refresh();
         $this->assertNotNull($user->avatar_path);
         Storage::disk('local')->assertExists($user->avatar_path);
-        $this->assertStringStartsWith('/avatars/' . $user->id, $user->avatar);
+        $this->assertStringStartsWith('/avatars/'.$user->id, $user->avatar);
 
         $old = $user->avatar_path;
         $this->actingAs($user)->delete('/settings/profile/avatar')->assertSessionHasNoErrors();
@@ -56,11 +56,11 @@ class ProfileAndUsersTest extends TestCase
 
         $this->actingAs($owner)->post('/settings/profile/avatar', ['avatar' => UploadedFile::fake()->image('me.jpg')]);
 
-        $this->actingAs($owner)->get('/avatars/' . $owner->id)->assertOk();
-        $this->actingAs($this->admin())->get('/avatars/' . $owner->id)->assertOk();
-        $this->actingAs($other)->get('/avatars/' . $owner->id)->assertNotFound();
+        $this->actingAs($owner)->get('/avatars/'.$owner->id)->assertOk();
+        $this->actingAs($this->admin())->get('/avatars/'.$owner->id)->assertOk();
+        $this->actingAs($other)->get('/avatars/'.$owner->id)->assertNotFound();
         auth()->logout();
-        $this->get('/avatars/' . $owner->id)->assertRedirect('/login');
+        $this->get('/avatars/'.$owner->id)->assertRedirect('/login');
     }
 
     public function test_changing_email_needs_the_current_password(): void

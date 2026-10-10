@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -33,7 +33,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-use HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -52,6 +52,7 @@ use HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthen
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
     // The page shows this as the profile picture. Null means "use initials".
     public function getAvatarAttribute(): ?string
     {
@@ -59,7 +60,7 @@ use HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthen
             return null;
         }
 
-        return '/avatars/' . $this->id . '?v=' . substr(md5($this->avatar_path), 0, 8);
+        return '/avatars/'.$this->id.'?v='.substr(md5($this->avatar_path), 0, 8);
     }
 
     public function orders()
