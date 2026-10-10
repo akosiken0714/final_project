@@ -1,4 +1,4 @@
-import Req from '@/components/Req';
+﻿import Req from '@/components/Req';
 import { useForm, Head, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import LocationPicker from '@/components/LocationPicker';
@@ -198,7 +198,7 @@ export default function Create({
     // Moving the pin also fills in an empty address, so the customer only has to tap the map.
     const movePin = (p: { lat: number; lng: number }) => {
         setPin(p);
-        fillAddress(p, true);
+        void fillAddress(p, true);
     };
 
     const useSavedSpot = () => {

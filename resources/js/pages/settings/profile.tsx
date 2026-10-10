@@ -68,7 +68,7 @@ export default function Profile({
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 setFinding(false);
-                movePin({
+                void movePin({
                     lat: round6(pos.coords.latitude),
                     lng: round6(pos.coords.longitude),
                 });

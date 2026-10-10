@@ -133,7 +133,7 @@ export default function LocationPicker({
     useEffect(() => {
         let dead = false;
 
-        (async () => {
+        void (async () => {
             const L = (await import('leaflet')).default;
             if (dead || !box.current) return;
             lib.current = L;
@@ -211,7 +211,7 @@ export default function LocationPicker({
                         if (e.key === 'Enter') {
                             e.preventDefault();
                             if (timer.current) clearTimeout(timer.current);
-                            search(query);
+                            void search(query);
                         }
                     }}
                 />

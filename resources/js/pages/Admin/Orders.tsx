@@ -1,4 +1,4 @@
-import { router, Head } from '@inertiajs/react';
+﻿import { router, Head } from '@inertiajs/react';
 import { ReactNode } from 'react';
 import PaymentBadge from '@/components/PaymentBadge';
 import AnalyticsPanel from '@/components/AnalyticsPanel';
@@ -16,7 +16,6 @@ const day = (iso: string) =>
 
 export default function Orders({
     orders,
-    statuses,
     stats,
     view,
     counts,
