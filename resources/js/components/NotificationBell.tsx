@@ -29,7 +29,6 @@ export default function NotificationBell() {
             if (!document.hidden)
                 router.reload({
                     only: ['notifications'],
-                    preserveScroll: true,
                 });
         }, 10000);
         return () => clearInterval(t);
