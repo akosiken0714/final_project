@@ -8,6 +8,9 @@ class DeliveryZone
 {
     public const REFUSAL = "Sorry, we can't deliver to this location.";
 
+    /**
+     * @return array{name: string, address: string, lat: float, lng: float}
+     */
     public static function shop(): array
     {
         return [
@@ -19,6 +22,9 @@ class DeliveryZone
     }
 
     // What the order page needs to repeat the check on screen.
+    /**
+     * @return array<string, mixed>
+     */
     public static function forPage(): array
     {
         return [
@@ -56,9 +62,11 @@ class DeliveryZone
             return ['deliverable' => false, 'distance_km' => round($km, 2), 'fee' => null, 'message' => self::REFUSAL];
         }
 
-        $tiers = collect(config('laundry.delivery.tiers'))->sortBy('km')->values();
+        /** @var array<int, array{km: float|int, fee: float|int}> $tierConfig */
+        $tierConfig = config('laundry.delivery.tiers');
+        $tiers = collect($tierConfig)->sortBy('km')->values();
         $tier = $tiers->first(fn ($t) => $km <= $t['km']) ?? $tiers->last();
 
-        return ['deliverable' => true, 'distance_km' => round($km, 2), 'fee' => (float) $tier['fee'], 'message' => null];
+        return ['deliverable' => true, 'distance_km' => round($km, 2), 'fee' => (float) ($tier['fee'] ?? 0), 'message' => null];
     }
 }

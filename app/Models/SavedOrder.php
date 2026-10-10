@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 // A named, reusable order ("Weekly wash", "Mom's bedding"). It never stores a photo.
 class SavedOrder extends Model
@@ -17,12 +18,18 @@ class SavedOrder extends Model
         'last_used_at' => 'datetime',
     ];
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function service()
+    /**
+     * @return BelongsTo<Service, $this>
+     */
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class)->withTrashed();
     }
@@ -42,6 +49,9 @@ class SavedOrder extends Model
 
     // Saves under this name. If the customer already has one with that name, it is updated instead of duplicated.
     // Saving counts as "used", so it moves to the front of the list.
+    /**
+     * @param  array<string, mixed>  $fields
+     */
     public static function remember(User $user, string $name, array $fields): self
     {
         $name = trim($name);
@@ -75,6 +85,9 @@ class SavedOrder extends Model
     }
 
     // What the pages need to show and reuse a saved order. Most recently used first.
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public static function cardsFor(User $user): array
     {
         return static::where('user_id', $user->id)
@@ -83,22 +96,27 @@ class SavedOrder extends Model
             ->orderByDesc('last_used_at')
             ->orderBy('name')
             ->get()
-            ->map(fn (self $s) => [
-                'id' => $s->id,
-                'name' => $s->name,
-                'service_id' => $s->service_id,
-                'quantity' => (int) $s->quantity,
-                'address' => $s->address,
-                'fulfillment' => $s->fulfillment ?: Order::DELIVERY,
-                'lat' => $s->lat,
-                'lng' => $s->lng,
-                'instructions' => $s->instructions,
-                'service_name' => $s->service?->name,
-                'unit' => $s->service?->unit,
-                'price' => $s->service?->price,
-                // false when the shop removed or hid that service since it was saved
-                'available' => (bool) ($s->service && ! $s->service->trashed() && $s->service->active),
-            ])
+            ->map(function (self $s) {
+                /** @var Service|null $service */
+                $service = $s->service;
+
+                return [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'service_id' => $s->service_id,
+                    'quantity' => (int) $s->quantity,
+                    'address' => $s->address,
+                    'fulfillment' => $s->fulfillment ?: Order::DELIVERY,
+                    'lat' => $s->lat,
+                    'lng' => $s->lng,
+                    'instructions' => $s->instructions,
+                    'service_name' => $service?->name,
+                    'unit' => $service?->unit,
+                    'price' => $service?->price,
+                    // false when the shop removed or hid that service since it was saved
+                    'available' => (bool) ($service && ! $service->trashed() && $service->active),
+                ];
+            })
             ->values()
             ->all();
     }

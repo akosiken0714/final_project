@@ -7,6 +7,7 @@ use App\Concerns\ProfileValidationRules;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Activity;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,7 +16,7 @@ class UserController extends Controller
 {
     use PasswordValidationRules, ProfileValidationRules;
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $input = $request->all();
         $input['phone'] = $this->cleanPhone($input['phone'] ?? null);
@@ -41,7 +42,7 @@ class UserController extends Controller
         // role is never mass-assigned: only this admin-only form can set it
         $user->role = $data['role'];
         // The admin vouches for this person, so no email-verification step is needed.
-        $user->email_verified_at = now();
+        $user->forceFill(['email_verified_at' => now()]);
         $user->save();
 
         Activity::log('user.created', "Account created: {$user->name} ({$data['role']})", null, $request->user()->id);

@@ -6,15 +6,17 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Services\Payments\Payments;
 use App\Support\Activity;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Inertia\Response;
 
 // The pay screen for GCash orders. Right now it talks to the demo gateway (no real money).
 class PaymentController extends Controller
 {
-    public function show(Request $request, Order $order)
+    public function show(Request $request, Order $order): Response
     {
         $this->mine($request, $order);
 
@@ -26,7 +28,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function pay(Request $request, Order $order)
+    public function pay(Request $request, Order $order): RedirectResponse
     {
         $this->mine($request, $order);
 

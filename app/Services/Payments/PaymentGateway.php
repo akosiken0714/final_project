@@ -12,5 +12,8 @@ interface PaymentGateway
     public function name(): string;
 
     // Try to charge the order's amount due. $details is whatever the pay screen collected (number, code...).
+    /**
+     * @param  array<string, mixed>  $details
+     */
     public function charge(Order $order, array $details): PaymentResult;
 }

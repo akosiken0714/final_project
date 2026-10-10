@@ -12,6 +12,9 @@ class UpdateOrderStatusRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function rules(): array
     {
         return ['status' => 'required|in:'.implode(',', Order::STATUSES)];

@@ -12,13 +12,16 @@ use App\Support\DeliveryZone;
 use App\Support\OrderViews;
 use App\Support\PhotoSanitizer;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $user = $request->user();
         $mine = Order::where('user_id', $user->id);
@@ -40,7 +43,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function create(Request $request)
+    public function create(Request $request): Response
     {
         return Inertia::render('Orders/Create', [
             'services' => Service::where('active', true)->get(),
@@ -51,11 +54,11 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(StoreOrderRequest $request)
+    public function store(StoreOrderRequest $request): RedirectResponse
     {
         $user = $request->user();
         $v = $request->validated();
-        $service = Service::where('active', true)->findOrFail($v['service_id']);
+        $service = Service::where('active', true)->findOrFail((int) $v['service_id']);
 
         $delivery = $v['fulfillment'] === Order::DELIVERY;
 
@@ -126,6 +129,9 @@ class OrderController extends Controller
     }
 
     // Photos are private: only the owner or an admin can view them.
+    /**
+     * @return StreamedResponse
+     */
     public function photo(Request $request, Order $order)
     {
         $user = $request->user();
@@ -144,7 +150,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function destroyPhoto(Request $request, Order $order)
+    public function destroyPhoto(Request $request, Order $order): RedirectResponse
     {
         abort_unless($order->user_id === $request->user()->id, 404);
 

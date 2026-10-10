@@ -49,16 +49,25 @@ trait ProfileValidationRules
         ];
     }
 
+    /**
+     * @return array<int, string>
+     */
     protected function avatarRules(): array
     {
         return ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:3072'];
     }
 
+    /**
+     * @return array<int, string>
+     */
     protected function phoneRules(bool $required = true): array
     {
         return [$required ? 'required' : 'nullable', 'string', 'regex:/^(09\d{9}|\+639\d{9})$/'];
     }
 
+    /**
+     * @return array<string, string>
+     */
     protected function phoneMessages(): array
     {
         return ['phone.regex' => 'Use a Philippine number: 09XX XXX XXXX or +63 9XX XXX XXXX.'];

@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Service;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -24,6 +25,9 @@ class AnalyticsController extends Controller
     private const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     // All the numbers for the dashboard's analytics section.
+    /**
+     * @return array<string, mixed>
+     */
     public function data(Request $request): array
     {
         $days = $this->days($request);
@@ -124,7 +128,7 @@ class AnalyticsController extends Controller
     }
 
     // Analytics now lives on the dashboard, so the old address just goes there.
-    public function index(Request $request)
+    public function index(Request $request): RedirectResponse
     {
         return redirect('/admin'.($request->query('range') ? '?range='.$this->days($request) : ''));
     }
@@ -145,6 +149,9 @@ class AnalyticsController extends Controller
 
         return response()->streamDownload(function () use ($query, $appTz) {
             $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
             fwrite($out, "\xEF\xBB\xBF"); // so Excel reads names with accents correctly
             fputcsv($out, ['Order #', 'Date (Manila)', 'Customer', 'Phone', 'Service', 'Quantity', 'Total', 'Status'], ',', '"', '');
 
@@ -177,6 +184,10 @@ class AnalyticsController extends Controller
         return $before > 0 ? round(($now - $before) / $before * 100, 1) : null;
     }
 
+    /**
+     * @param  array<int, array<int, int>>  $heat
+     * @return array{day: string|null, hour: string|null}
+     */
     private function peak(array $heat): array
     {
         $dayTotals = array_map('array_sum', $heat);
@@ -187,18 +198,24 @@ class AnalyticsController extends Controller
             }
         }
 
-        if (max($dayTotals) === 0) {
+        $topDay = max($dayTotals ?: [0]);
+
+        if ($topDay === 0) {
             return ['day' => null, 'hour' => null];
         }
 
-        $h = array_search(max($hourTotals), $hourTotals, true);
+        $h = (int) array_search(max($hourTotals), $hourTotals, true);
 
         return [
-            'day' => self::DAY_NAMES[array_search(max($dayTotals), $dayTotals, true)],
+            'day' => self::DAY_NAMES[(int) array_search($topDay, $dayTotals, true)],
             'hour' => (($h % 12) ?: 12).($h < 12 ? ' AM' : ' PM'),
         ];
     }
 
+    /**
+     * @param  array<int|string, array<string, mixed>>  $mix
+     * @return array<int, array<string, mixed>>
+     */
     private function serviceMix(array $mix): array
     {
         $names = Service::pluck('name', 'id');
@@ -217,6 +234,9 @@ class AnalyticsController extends Controller
     }
 
     // Where every order is right now (all time, not just the chosen range).
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function pipeline(): array
     {
         $counts = DB::table('orders')
@@ -251,6 +271,9 @@ class AnalyticsController extends Controller
     }
 
     // Average time from order to first "ready", using the saved status history.
+    /**
+     * @return array<string, mixed>
+     */
     private function turnaround(string $from, string $appTz): array
     {
         $rows = DB::table('order_status_logs as l')
@@ -275,6 +298,11 @@ class AnalyticsController extends Controller
         ];
     }
 
+    /**
+     * @param  array<int|string, int>  $count
+     * @param  array<int|string, float|int>  $spend
+     * @return array<string, mixed>
+     */
     private function customers(array $count, array $spend, CarbonImmutable $start, string $appTz): array
     {
         $firstSeen = DB::table('orders')
@@ -309,6 +337,9 @@ class AnalyticsController extends Controller
         return ['new' => $new, 'returning' => $returning, 'top' => $top];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function stuck(): array
     {
         $before = now()->subHours(self::STUCK_HOURS)->format('Y-m-d H:i:s');

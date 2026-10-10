@@ -7,6 +7,7 @@ use App\Models\SavedOrder;
 use App\Support\DeliveryZone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreOrderRequest extends FormRequest
 {
@@ -24,6 +25,9 @@ class StoreOrderRequest extends FormRequest
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $delivery = $this->input('fulfillment') === Order::DELIVERY;
@@ -51,6 +55,9 @@ class StoreOrderRequest extends FormRequest
 
     // Check the saved-order limit and the delivery area BEFORE the order is placed,
     // so nothing is half-done when the answer is "no".
+    /**
+     * @param  Validator  $validator
+     */
     public function withValidator($validator): void
     {
         $validator->after(function ($v) {

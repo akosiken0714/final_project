@@ -18,6 +18,9 @@ class Activity
         return '#'.str_pad((string) $orderId, 4, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * @param  array<string, mixed>  $meta
+     */
     public static function log(string $event, string $summary, ?Order $order = null, ?int $actorId = null, array $meta = []): void
     {
         try {

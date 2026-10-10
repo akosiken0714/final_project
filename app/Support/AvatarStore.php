@@ -36,7 +36,8 @@ class AvatarStore
         }
 
         if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
-            $o = @exif_read_data($path)['Orientation'] ?? 1;
+            $exif = @exif_read_data($path);
+            $o = is_array($exif) ? ($exif['Orientation'] ?? 1) : 1;
             $img = match ($o) {
                 3 => imagerotate($img, 180, 0) ?: $img,
                 6 => imagerotate($img, -90, 0) ?: $img,
@@ -53,7 +54,7 @@ class AvatarStore
         $y = intdiv($h - $side, 2);
 
         $out = imagecreatetruecolor(self::SIZE, self::SIZE);
-        imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));
+        imagefill($out, 0, 0, (int) imagecolorallocate($out, 255, 255, 255));
         imagecopyresampled($out, $img, 0, 0, $x, $y, self::SIZE, self::SIZE, $side, $side);
 
         ob_start();

@@ -7,14 +7,16 @@ use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Models\Order;
 use App\Support\Activity;
 use App\Support\OrderViews;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class OrderController extends Controller
 {
     // The admin dashboard: quick numbers, the orders to work on, and the analytics below them.
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $list = OrderViews::resolve($request, Order::query(), ['user', 'service']);
 
@@ -32,7 +34,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function update(UpdateOrderStatusRequest $request, Order $order)
+    public function update(UpdateOrderStatusRequest $request, Order $order): RedirectResponse
     {
         $to = $request->validated()['status'];
         $from = $order->status;
@@ -83,11 +85,11 @@ class OrderController extends Controller
             || ($to === Order::READY && $order->fulfillment === Order::DROPOFF);
         Activity::notifyUser($order->user, "Order {$tag} is now {$to}", $message, $finished ? '/orders?view=finished' : '/orders', $order->id);
 
-        return back()->with('success', 'Order #'.str_pad($order->id, 4, '0', STR_PAD_LEFT)." is now {$to}.");
+        return back()->with('success', 'Order #'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT)." is now {$to}.");
     }
 
     // The admin collected the cash early (or wants to record it by hand).
-    public function markPaid(Request $request, Order $order)
+    public function markPaid(Request $request, Order $order): RedirectResponse
     {
         if ($order->payment_method !== Order::CASH) {
             return back()->withErrors(['payment' => 'Only cash orders can be marked as paid by hand. GCash orders are marked when the customer pays.']);
@@ -102,6 +104,6 @@ class OrderController extends Controller
             Activity::notifyUser($order->user, "Payment recorded for {$tag}", 'We received your cash payment of '.Activity::money($order->amount_due).'.', '/orders', $order->id);
         }
 
-        return back()->with('success', 'Order #'.str_pad($order->id, 4, '0', STR_PAD_LEFT).' marked as paid.');
+        return back()->with('success', 'Order #'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT).' marked as paid.');
     }
 }

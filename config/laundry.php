@@ -24,6 +24,12 @@ return [
         ],
     ],
 
+    // The first admin account, created by `php artisan db:seed`. Set both in .env.
+    'admin' => [
+        'email' => env('ADMIN_EMAIL'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
     'payments' => [
         // "demo" = pretend GCash (no real money). To go live, add a gateway class and map it in
         // App\Services\Payments\Payments::gateway(), then set PAYMENT_DRIVER in .env.

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\SavedOrder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -11,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 class SavedOrderController extends Controller
 {
     // Save (or update, if the name already exists) a reusable order for the logged-in customer.
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $delivery = $request->input('fulfillment', Order::DELIVERY) !== Order::DROPOFF;
 
@@ -43,7 +44,7 @@ class SavedOrderController extends Controller
         return back()->with('success', 'Saved as "'.trim($data['name']).'".');
     }
 
-    public function destroy(Request $request, SavedOrder $savedOrder)
+    public function destroy(Request $request, SavedOrder $savedOrder): RedirectResponse
     {
         abort_unless($savedOrder->user_id === $request->user()->id, 404);
 

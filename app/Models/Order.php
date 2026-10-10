@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Order extends Model
@@ -51,6 +54,10 @@ class Order extends Model
 
     const PAID = 'paid';
 
+    /**
+     * @param  Builder<Order>  $query
+     * @return Builder<Order>
+     */
     public function scopeOngoing($query)
     {
         return $query->where(function ($q) {
@@ -79,22 +86,31 @@ class Order extends Model
         }
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
 
-    public function service()
+    /**
+     * @return BelongsTo<Service, $this>
+     */
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class)->withTrashed();
     }
 
-    public function payments()
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
 
-    public function getPhotoUrlAttribute()
+    public function getPhotoUrlAttribute(): ?string
     {
         return $this->photo ? url("/orders/{$this->id}/photo") : null;
     }

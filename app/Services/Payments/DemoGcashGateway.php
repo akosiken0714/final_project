@@ -14,6 +14,9 @@ class DemoGcashGateway implements PaymentGateway
         return 'demo';
     }
 
+    /**
+     * @param  array<string, mixed>  $details
+     */
     public function charge(Order $order, array $details): PaymentResult
     {
         $number = preg_replace('/\D/', '', (string) ($details['gcash_number'] ?? ''));

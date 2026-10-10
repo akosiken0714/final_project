@@ -12,8 +12,8 @@ class LaundrySeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('ADMIN_EMAIL');
-        $pass = env('ADMIN_PASSWORD');
+        $email = config('laundry.admin.email');
+        $pass = config('laundry.admin.password');
 
         if ($email && $pass) {
             Validator::make(['email' => $email, 'password' => $pass], [
@@ -28,7 +28,7 @@ class LaundrySeeder extends Seeder
                 'email_verified_at' => now(),
             ])->save();
         } else {
-            $this->command?->warn('Set ADMIN_EMAIL and ADMIN_PASSWORD in .env to create the admin.');
+            optional($this->command)->warn('Set ADMIN_EMAIL and ADMIN_PASSWORD in .env to create the admin.');
         }
 
         $services = [

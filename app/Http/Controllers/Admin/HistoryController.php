@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 // The shop's history book: every order, status change, payment and admin action, newest first.
@@ -17,7 +19,7 @@ class HistoryController extends Controller
 
     private const TYPES = ['all' => 'Everything', 'orders' => 'Orders', 'payments' => 'Payments', 'admin' => 'Admin actions'];
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         [$type, $q] = $this->filters($request);
 
@@ -26,9 +28,9 @@ class HistoryController extends Controller
                 'id' => $l->id,
                 'event' => $l->event,
                 'summary' => $l->summary,
-                'who' => $l->user?->name ?? 'System',
+                'who' => $l->user->name ?? 'System',
                 'order_id' => $l->order_id,
-                'at' => $l->created_at?->toIso8601String(),
+                'at' => optional($l->created_at)->toIso8601String(),
             ]);
 
         $now = CarbonImmutable::now(self::TZ);
@@ -58,6 +60,9 @@ class HistoryController extends Controller
 
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['Date (Manila)', 'Event', 'Who', 'Order #', 'What happened'], ',', '"', '');
 
@@ -65,7 +70,7 @@ class HistoryController extends Controller
                 fputcsv($out, [
                     $l->created_at?->setTimezone(self::TZ)->format('Y-m-d H:i'),
                     $l->event,
-                    $this->csvSafe($l->user?->name ?? 'System'),
+                    $this->csvSafe($l->user->name ?? 'System'),
                     $l->order_id,
                     $this->csvSafe($l->summary),
                 ], ',', '"', '');
@@ -74,6 +79,9 @@ class HistoryController extends Controller
         }, 'shop-history.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
+    /**
+     * @return array{0: string, 1: string}
+     */
     private function filters(Request $request): array
     {
         $type = array_key_exists((string) $request->query('type'), self::TYPES) ? (string) $request->query('type') : 'all';
@@ -81,7 +89,10 @@ class HistoryController extends Controller
         return [$type, trim((string) $request->query('q', ''))];
     }
 
-    private function query(string $type, string $q)
+    /**
+     * @return Builder<ActivityLog>
+     */
+    private function query(string $type, string $q): Builder
     {
         return ActivityLog::query()
             ->when($type === 'orders', fn ($x) => $x->where('event', 'like', 'order.%'))

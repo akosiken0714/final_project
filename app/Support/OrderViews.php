@@ -20,6 +20,7 @@ class OrderViews
     /**
      * @param  Builder<Order>  $base  every order this person is allowed to see
      * @param  array<int, string>  $with  relations to load
+     * @return array<string, mixed>
      */
     public static function resolve(Request $request, Builder $base, array $with = [], bool $customerView = false): array
     {

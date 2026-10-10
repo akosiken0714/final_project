@@ -14,6 +14,9 @@ class ProfileUpdateRequest extends FormRequest
         $this->merge(['phone' => $this->cleanPhone($this->input('phone'))]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

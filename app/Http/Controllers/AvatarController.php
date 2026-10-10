@@ -6,10 +6,14 @@ use App\Models\User;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AvatarController extends Controller
 {
     // A profile picture can be seen by its owner and by admins. Nobody else.
+    /**
+     * @return StreamedResponse
+     */
     public function show(Request $request, User $user)
     {
         $viewer = $request->user();

@@ -28,11 +28,12 @@ class PhotoSanitizer
         }
 
         if (function_exists('exif_read_data') && $mime === 'image/jpeg') {
-            $o = @exif_read_data($path)['Orientation'] ?? 1;
+            $exif = @exif_read_data($path);
+            $o = is_array($exif) ? ($exif['Orientation'] ?? 1) : 1;
             $img = match ($o) {
-                3 => imagerotate($img, 180, 0),
-                6 => imagerotate($img, -90, 0),
-                8 => imagerotate($img, 90, 0),
+                3 => imagerotate($img, 180, 0) ?: $img,
+                6 => imagerotate($img, -90, 0) ?: $img,
+                8 => imagerotate($img, 90, 0) ?: $img,
                 default => $img,
             };
         }
@@ -42,7 +43,7 @@ class PhotoSanitizer
         $max = 1600;
         if (max($w, $h) > $max) {
             $ratio = $max / max($w, $h);
-            $img = imagescale($img, (int) round($w * $ratio), (int) round($h * $ratio));
+            $img = imagescale($img, (int) round($w * $ratio), (int) round($h * $ratio)) ?: $img;
         }
 
         ob_start();

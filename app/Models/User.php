@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -63,7 +64,10 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return '/avatars/'.$this->id.'?v='.substr(md5($this->avatar_path), 0, 8);
     }
 
-    public function orders()
+    /**
+     * @return HasMany<Order, $this>
+     */
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }

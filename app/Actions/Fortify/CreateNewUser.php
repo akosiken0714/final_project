@@ -16,6 +16,9 @@ class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules, ProfileValidationRules;
 
+    /**
+     * @param  array<string, mixed>  $input
+     */
     public function create(array $input): User
     {
         $key = 'register:'.request()->ip();

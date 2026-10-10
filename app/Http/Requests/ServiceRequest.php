@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Service;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,13 +20,17 @@ class ServiceRequest extends FormRequest
         }
     }
 
+    /**
+     * @return array<string, array<int, mixed>>
+     */
     public function rules(): array
     {
         $service = $this->route('service');
         $req = $service ? 'sometimes' : 'required';
+        $serviceId = $service instanceof Service ? $service->id : null;
 
         return [
-            'name' => [$req, 'string', 'max:100', Rule::unique('services', 'name')->ignore($service?->id)],
+            'name' => [$req, 'string', 'max:100', Rule::unique('services', 'name')->ignore($serviceId)],
             'unit' => [$req, Rule::in(['kg', 'load'])],
             'price' => [$req, 'numeric', 'gt:0', 'max:10000'],
             'active' => ['sometimes', 'boolean'],
