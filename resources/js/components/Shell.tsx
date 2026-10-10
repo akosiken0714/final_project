@@ -1,6 +1,8 @@
-﻿import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
 import Flash from '@/components/Flash';
+import NotificationBell from '@/components/NotificationBell';
+import UserAvatar from '@/components/UserAvatar';
 
 
 export default function Shell({ children, bare = false }: PropsWithChildren<{ bare?: boolean }>) {
@@ -25,8 +27,7 @@ export default function Shell({ children, bare = false }: PropsWithChildren<{ ba
                     style={{
                         background:
                             'radial-gradient(1200px 800px at 15% 10%, rgba(92,140,168,0.08), transparent 60%),' +
-                            'radial-gradient(900px 700px at 85% 85%, rgba(240,169,139,0.05), transparent 60%),' +
-                            'radial-gradient(1400px 1000px at 50% 50%, rgba(15,30,43,0), rgba(9,18,26,0.35) 100%)',
+                            'radial-gradient(1400px 1000px at 50% 50%, transparent, rgba(6,17,22,0.28) 100%)',
                     }}
                 />
                 <div
@@ -50,16 +51,24 @@ export default function Shell({ children, bare = false }: PropsWithChildren<{ ba
             <nav className="sticky top-0 z-30 border-b border-[#F7F1E8]/10 bg-[#0B1F26]/90 backdrop-blur">
                 <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-y-3 px-6 py-4 md:grid md:grid-cols-[1fr_auto_1fr]">
                     <Link href="/" className="flex items-center gap-2 font-serif text-xl text-[#F7F1E8]">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0A98B] font-sans text-sm font-black text-[#0B1F26]">S</span>
-                        Sinabunan.
+                        <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-[#F0A98B]/15 p-0.5 ring-1 ring-[#F0A98B]/25">
+                            <img
+                                src="/images/logo.jpg"
+                                alt="PhineWash Laundry Services"
+                                className="h-full w-full rounded-md object-cover"
+                                style={{ filter: 'sepia(0.55) hue-rotate(-15deg) saturate(0.9) brightness(1.08) contrast(0.95)' }}
+                            />
+                        </span>
+                        PhineWash.
                     </Link>
 
                     <div className="order-3 flex w-full items-center justify-center gap-6 md:order-none md:w-auto md:gap-8">
                         {user?.role === 'admin' ? (
                             <>
-                                <Link href="/admin" className={link('/admin')}>Orders</Link>
+                                <Link href="/admin" className={link('/admin')}>Dashboard</Link>
                                 <Link href="/admin/customers" className={link('/admin/customers')}>Customers</Link>
                                 <Link href="/admin/services" className={link('/admin/services')}>Pricing</Link>
+                                <Link href="/admin/history" className={link('/admin/history')}>History</Link>
                             </>
                         ) : user ? (
                             <>
@@ -80,7 +89,11 @@ export default function Shell({ children, bare = false }: PropsWithChildren<{ ba
                     <div className="flex items-center justify-self-end gap-5">
                         {user ? (
                             <>
-                                {user.role === 'admin' && <Link href="/settings/profile" className={link('/settings')}>Settings</Link>}
+                                <NotificationBell />
+                                <Link href="/settings/profile" aria-label="Your profile and settings" title="Profile & settings" className="flex items-center gap-2">
+                                    <UserAvatar user={user} size={34} />
+                                    <span className={`hidden max-w-[120px] truncate lg:inline ${link('/settings')}`}>{user.name.split(' ')[0]}</span>
+                                </Link>
                                 <Link href="/logout" method="post" as="button" className={plain}>Logout</Link>
                             </>
                         ) : (

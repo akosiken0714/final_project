@@ -2,82 +2,75 @@
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
-export default function AuthSimpleLayout({
-    children,
-    title,
-    description,
-}: AuthLayoutProps) {
+function SewnButton({ className = '' }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 120 120" className={className} aria-hidden="true">
+            <circle cx="60" cy="62" r="46" fill="#000" fillOpacity="0.28" />
+            <circle cx="60" cy="60" r="46" fill="#F0A98B" />
+            <circle cx="60" cy="60" r="35" fill="none" stroke="#0F1E2B" strokeOpacity="0.28" strokeWidth="2" />
+            {[[-10, -10], [10, -10], [-10, 10], [10, 10]].map(([dx, dy]) => (
+                <circle key={`${dx}${dy}`} cx={60 + dx} cy={60 + dy} r="5" fill="#0B1F26" />
+            ))}
+            <path d="M50 50 L70 70 M70 50 L50 70" stroke="#F7F1E8" strokeWidth="3.2" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
     const words = (title ?? '').split(' ');
     const lastWord = words.pop();
     const firstWords = words.join(' ');
 
     return (
-        <div className="relative flex min-h-svh flex-col items-center overflow-hidden bg-[#0B1F26] px-6 pb-16 text-[#F7F1E8]">
-            <div className="float pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full bg-[#5C8CA8]/25 blur-3xl" />
-            <div
-                className="float pointer-events-none absolute -right-32 bottom-0 h-80 w-80 rounded-full bg-[#F0A98B]/10 blur-3xl"
-                style={{ animationDelay: '-3s' }}
-            />
+        <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#0B1F26] text-[#F7F1E8]">
+            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background: 'radial-gradient(1000px 700px at 12% 35%, rgba(92,140,168,0.22), transparent 65%)',
+                    }}
+                />
+                <div
+                    className="absolute inset-0 opacity-[0.05]"
+                    style={{ backgroundImage: 'repeating-linear-gradient(45deg, #F7F1E8 0 1px, transparent 1px 6px)' }}
+                />
+            </div>
 
-            <header className="relative z-10 w-full max-w-6xl py-6">
-                <Link
-                    href={home()}
-                    className="text-sm text-[#F7F1E8]/60 transition hover:text-[#F0A98B]"
-                >
-                    ← Sinabunan Laundry Shop
+            <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+                <Link href={home()} className="text-sm text-[#F7F1E8]/60 transition hover:text-[#F0A98B]">
+                    ← Back to home
                 </Link>
+                <span className="font-serif text-xl">
+                    PhineWash<span className="italic text-[#F0A98B]">.</span>
+                </span>
             </header>
 
-            <div className="relative z-10 mt-2 w-full">
-                <div className="h-0.5 w-full bg-[#F7F1E8]/40" />
+            <main className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 content-center items-center gap-14 px-6 pb-16 pt-4 lg:grid-cols-[1fr_29rem] lg:gap-20">
+                <section>
+                    <h1
+                        className="font-serif leading-[0.95] tracking-tight"
+                        style={{ fontSize: 'clamp(3.25rem, 9vw, 8.5rem)' }}
+                    >
+                        {firstWords && <span className="block">{firstWords}</span>}
+                        <span className="block italic text-[#F0A98B]">{lastWord}</span>
+                    </h1>
 
-                <div className="mx-auto w-full max-w-sm">
-                    <div className="hang flex flex-col items-center">
-                        <div className="z-10 -mt-3 h-8 w-3 rounded-sm bg-[#F0A98B]" />
-                        <div className="-mt-1 h-10 w-px bg-[#F7F1E8]/40" />
+                    <svg viewBox="0 0 300 14" fill="none" className="mt-4 h-4 w-56 md:w-72" aria-hidden="true">
+                        <path d="M3 9 C 50 2, 90 13, 140 7 S 230 3, 297 8" stroke="#F0A98B" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="9 8" />
+                    </svg>
 
-                        <div className="auth-tag w-full rounded-3xl bg-[#F7F1E8] px-8 pb-8 pt-6 text-[#0F1E2B] shadow-2xl">
-                            <div className="mx-auto mb-5 h-4 w-4 rounded-full border-2 border-[#0F1E2B]/40" />
+                    {description && (
+                        <p className="mt-6 max-w-sm text-base text-[#F7F1E8]/65 md:text-lg">{description}</p>
+                    )}
+                </section>
 
-                            <p className="text-center text-[10px] uppercase tracking-[0.3em] text-[#0F1E2B]/50">
-                                Order tag
-                            </p>
-                            <h1 className="mt-2 text-center font-serif text-4xl leading-tight">
-                                {firstWords && <>{firstWords} </>}
-                                <span className="italic text-[#E58A63]">
-                                    {lastWord}
-                                </span>
-                            </h1>
-                            {description && (
-                                <p className="mt-3 text-center text-sm text-[#0F1E2B]/60">
-                                    {description}
-                                </p>
-                            )}
-
-                            <div className="mt-8">{children}</div>
-
-                            <div
-                                className="mt-8 flex gap-1.5 border-t border-dashed border-[#0F1E2B]/25 pt-5"
-                                aria-hidden="true"
-                            >
-                                {[0, 1, 2, 3].map((i) => (
-                                    <div
-                                        key={i}
-                                        className="h-1 flex-1 overflow-hidden rounded-full bg-[#0F1E2B]/15"
-                                    >
-                                        <div
-                                            className="tagbar h-full w-full bg-[#F0A98B]"
-                                            style={{
-                                                animationDelay: `${1.2 + i * 0.3}s`,
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                <div className="relative">
+                    <SewnButton className="absolute -left-5 -top-8 z-10 h-20 w-20 md:-left-8 md:h-24 md:w-24" />
+                    <div className="auth-panel relative w-full rounded-[1.75rem] bg-[#F7F1E8] p-10 pt-14 text-[#0F1E2B] shadow-2xl">
+                        {children}
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

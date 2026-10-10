@@ -1,4 +1,4 @@
-﻿import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import Shell from '@/components/Shell';
 import { useCurrentUrl } from '@/hooks/use-current-url';
@@ -13,12 +13,17 @@ const tabs = [
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
+    const { auth }: any = usePage().props;
+    const isAdmin = auth?.user?.role === 'admin';
 
     return (
         <Shell>
-            <p className="rise text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">Account</p>
-            <h1 className="rise mt-3 font-serif text-5xl md:text-6xl" style={{ animationDelay: '.1s' }}>
-                Your <span className="italic text-[#F0A98B]">settings</span>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">
+                {isAdmin ? 'Admin account' : 'Account'}
+            </p>
+            <h1 className="mt-3 font-serif text-5xl md:text-6xl">
+                {isAdmin ? 'Admin ' : 'Your '}
+                <span className="italic text-[#F0A98B]">settings</span>
             </h1>
 
             <nav className="mt-8 flex gap-6 border-b border-[#F7F1E8]/15" aria-label="Settings">
@@ -37,7 +42,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                 ))}
             </nav>
 
-            <div className="auth-tag mt-8 max-w-2xl rounded-3xl bg-[#F7F1E8] p-8 text-[#0F1E2B] shadow-2xl">
+            <div className="mt-8 max-w-2xl rounded-[2rem] bg-[#F7F1E8] p-8 text-[#0F1E2B] shadow-2xl">
                 <section className="space-y-12">{children}</section>
             </div>
         </Shell>

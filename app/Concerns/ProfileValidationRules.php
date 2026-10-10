@@ -49,6 +49,11 @@ trait ProfileValidationRules
         ];
     }
 
+    protected function avatarRules(): array
+    {
+        return ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:3072'];
+    }
+
     protected function phoneRules(bool $required = true): array
     {
         return [$required ? 'required' : 'nullable', 'string', 'regex:/^(09\d{9}|\+639\d{9})$/'];

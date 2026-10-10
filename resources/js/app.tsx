@@ -1,4 +1,5 @@
 ﻿import { createInertiaApp } from '@inertiajs/react';
+import PageLoader from '@/components/PageLoader';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -28,14 +29,14 @@ void createInertiaApp({
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>
+                <PageLoader />
                 {app}
                 <Toaster />
             </TooltipProvider>
         );
     },
-    progress: {
-        color: '#4B5563',
-    },
+    // the PageLoader replaces the grey top progress bar
+    progress: false,
 });
 
 // This will set light / dark mode on load...

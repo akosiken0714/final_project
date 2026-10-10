@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
+use App\Support\AvatarStore;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -31,14 +32,25 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
             'phone' => $this->phoneRules(true),
             'address' => ['nullable', 'string', 'max:255'],
-        ], $this->phoneMessages())->validate();
+            'avatar' => $this->avatarRules(),
+        ], $this->phoneMessages() + ['avatar.mimes' => 'Picture must be a JPG, PNG or WebP.', 'avatar.max' => 'Picture must be 3 MB or smaller.'])->validate();
 
-        return User::create([
+        $user = new User();
+        $user->fill([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
             'phone' => $input['phone'],
             'address' => $input['address'] ?? null,
         ]);
+
+        // Optional profile picture. Checked last so a bad picture never leaves a half-made account.
+        if (isset($input['avatar']) && $input['avatar'] instanceof \Illuminate\Http\UploadedFile) {
+            $user->avatar_path = AvatarStore::store($input['avatar']);
+        }
+
+        $user->save();
+
+        return $user;
     }
 }

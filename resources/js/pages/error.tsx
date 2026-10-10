@@ -13,11 +13,8 @@ export default function ErrorPage({ status }: { status: number }) {
     return (
         <Shell>
             <Head title={String(status)} />
-            <div className="hang mx-auto flex max-w-md flex-col items-center text-center">
-                <div className="z-10 h-8 w-3 rounded-sm bg-[#F0A98B]" />
-                <div className="-mt-1 h-8 w-px bg-[#F7F1E8]/40" />
+            <div className=" mx-auto flex max-w-md flex-col items-center text-center">
                 <div className="w-full rounded-3xl bg-[#F7F1E8] p-10 text-[#0F1E2B] shadow-2xl">
-                    <div className="mx-auto mb-4 h-3 w-3 rounded-full border-2 border-[#0F1E2B]/40" />
                     <p className="text-xs uppercase tracking-[0.3em] text-[#0F1E2B]/60">Error {status}</p>
                     <p className="mt-2 font-serif text-5xl">{title}</p>
                     <p className="mt-3 text-[#0F1E2B]/70">{text}</p>

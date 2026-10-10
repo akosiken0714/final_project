@@ -68,8 +68,8 @@ export default function Services({ services }: { services: any[] }) {
     return (
         <Shell>
             <Head title="Pricing" />
-            <p className="rise text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">Admin</p>
-            <h1 className="rise mt-3 font-serif text-5xl md:text-6xl" style={{ animationDelay: '.1s' }}>
+            <p className=" text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">Admin</p>
+            <h1 className=" mt-3 font-serif text-5xl md:text-6xl">
                 Price <span className="italic text-[#F0A98B]">list</span>
             </h1>
 

@@ -1,30 +1,19 @@
-﻿import { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { motion } from 'motion/react';
+import { PropsWithChildren } from 'react';
 
 type Props = { delay?: number; className?: string };
 
+// Fades and slides up when it scrolls into view (now powered by motion).
 export default function Reveal({ children, delay = 0, className = '' }: PropsWithChildren<Props>) {
-    const ref = useRef<HTMLDivElement>(null);
-    const [show, setShow] = useState(false);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const io = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setShow(true);
-                    io.disconnect();
-                }
-            },
-            { threshold: 0.15 },
-        );
-        io.observe(el);
-        return () => io.disconnect();
-    }, []);
-
     return (
-        <div ref={ref} className={`reveal ${show ? 'show' : ''} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+        <motion.div
+            className={className}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.9, delay: delay / 1000, ease: [0.2, 0.8, 0.2, 1] }}
+        >
             {children}
-        </div>
+        </motion.div>
     );
 }

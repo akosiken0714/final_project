@@ -1,4 +1,6 @@
-﻿import { Form, Head } from '@inertiajs/react';
+import Req, { ReqNote } from '@/components/Req';
+import { Form, Head } from '@inertiajs/react';
+import AvatarField from '@/components/AvatarField';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -26,8 +28,15 @@ export default function Register({ passwordRules }: Props) {
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
+                            <ReqNote className="text-muted-foreground" />
+
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                                <Label>Profile picture (optional)</Label>
+                                <AvatarField name="avatar" serverError={errors.avatar} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="name">Name <Req /></Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -45,7 +54,7 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">Email address <Req /></Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -59,7 +68,7 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                                                         <div className="grid gap-2">
-                                <Label htmlFor="phone">Contact number</Label>
+                                <Label htmlFor="phone">Contact number <Req /></Label>
                                 <Input
                                     id="phone"
                                     type="tel"
@@ -77,7 +86,7 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="address">Address</Label>
+                                <Label htmlFor="address">Address (optional)</Label>
                                 <Input
                                     id="address"
                                     type="text"
@@ -89,7 +98,7 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">Password <Req /></Label>
                                 <PasswordInput
                                     id="password"
                                     required
@@ -100,11 +109,14 @@ export default function Register({ passwordRules }: Props) {
                                     passwordrules={passwordRules}
                                 />
                                 <InputError message={errors.password} />
+                                <p className="text-muted-foreground text-xs">
+                                    Use a long password you don&apos;t use anywhere else. You can pin your usual pickup spot on the map later in Settings.
+                                </p>
                             </div>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
-                                    Confirm password
+                                    Confirm password <Req />
                                 </Label>
                                 <PasswordInput
                                     id="password_confirmation"
@@ -145,6 +157,6 @@ export default function Register({ passwordRules }: Props) {
 }
 
 Register.layout = {
-    title: 'Get your tag',
+    title: 'Create your account',
     description: 'Create an account to start ordering.',
 };

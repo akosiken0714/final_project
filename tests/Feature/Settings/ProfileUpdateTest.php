@@ -31,6 +31,7 @@ class ProfileUpdateTest extends TestCase
                 'name' => 'Test User',
                 'email' => 'test@example.com',
                 'phone' => '09123456789',
+                'current_password' => 'password',
             ]);
 
         $response

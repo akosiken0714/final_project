@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Models\User;
+use App\Support\AvatarStore;
+use App\Support\DeliveryZone;
+use App\Concerns\ProfileValidationRules;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
@@ -15,6 +18,8 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    use ProfileValidationRules;
+
     /**
      * Show the user's profile settings page.
      */
@@ -23,6 +28,7 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'zone' => DeliveryZone::forPage(),
         ]);
     }
 
@@ -31,7 +37,10 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $data = $request->validated();
+        unset($data['current_password']);
+
+        $request->user()->fill($data);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -42,6 +51,36 @@ class ProfileController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 
         return to_route('profile.edit');
+    }
+
+    // Upload or replace the profile picture.
+    public function avatar(Request $request): RedirectResponse
+    {
+        $request->validate(['avatar' => ['required', ...$this->avatarRules()]], [
+            'avatar.required' => 'Choose a picture first.',
+            'avatar.mimes' => 'Picture must be a JPG, PNG or WebP.',
+            'avatar.max' => 'Picture must be 3 MB or smaller.',
+        ]);
+
+        $user = $request->user();
+        $old = $user->avatar_path;
+
+        $user->avatar_path = AvatarStore::store($request->file('avatar'));
+        $user->save();
+        AvatarStore::delete($old);
+
+        return back()->with('success', 'Profile picture updated.');
+    }
+
+    public function removeAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        AvatarStore::delete($user->avatar_path);
+        $user->avatar_path = null;
+        $user->save();
+
+        return back()->with('success', 'Profile picture removed.');
     }
 
     /**
@@ -55,6 +94,8 @@ class ProfileController extends Controller
             return back()->withErrors(['password' => "You're the only admin, so this account can't be deleted."]);
         }
 
+        $oldAvatar = $user->avatar_path;
+
         Auth::logout();
 
         // Soft delete: order history stays, personal details are wiped.
@@ -62,7 +103,12 @@ class ProfileController extends Controller
             'email' => "deleted-{$user->id}@deleted.invalid",
             'phone' => null,
             'address' => null,
+            'delivery_notes' => null,
+            'default_lat' => null,
+            'default_lng' => null,
+            'avatar_path' => null,
         ])->save();
+        AvatarStore::delete($oldAvatar);
         $user->delete();
 
         $request->session()->invalidate();

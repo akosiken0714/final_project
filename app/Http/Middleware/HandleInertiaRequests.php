@@ -42,6 +42,26 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // The bell: unread count + latest messages. Refreshed by a light poll (only this prop is re-sent).
+            'notifications' => function () use ($request) {
+                try {
+                    $user = $request->user();
+
+                    return $user ? [
+                        'unread' => $user->unreadNotifications()->count(),
+                        'items' => $user->notifications()->latest()->limit(8)->get()->map(fn ($n) => [
+                            'id' => $n->id,
+                            'title' => $n->data['title'] ?? '',
+                            'body' => $n->data['body'] ?? '',
+                            'url' => $n->data['url'] ?? null,
+                            'read' => $n->read_at !== null,
+                            'at' => $n->created_at?->toIso8601String(),
+                        ])->all(),
+                    ] : null;
+                } catch (\Throwable $e) {
+                    return null; // e.g. the notifications table has not been created yet
+                }
+            },
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
