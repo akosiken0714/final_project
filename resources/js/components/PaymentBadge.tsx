@@ -5,8 +5,10 @@ export default function PaymentBadge({ order }: { order: any }) {
 
     return (
         <span
-            className={`inline-block whitespace-nowrap rounded-full px-3 py-0.5 text-xs font-semibold ${
-                paid ? 'bg-[#2f7d5b]/15 text-[#1f5a40]' : 'bg-[#C96F48]/15 text-[#A5532F]'
+            className={`inline-block rounded-full px-3 py-0.5 text-xs font-semibold whitespace-nowrap ${
+                paid
+                    ? 'bg-[#2f7d5b]/15 text-[#1f5a40]'
+                    : 'bg-[#C96F48]/15 text-[#A5532F]'
             }`}
         >
             {method} · {paid ? 'Paid' : 'Unpaid'}

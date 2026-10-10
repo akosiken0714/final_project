@@ -2,7 +2,13 @@ import { animate, useInView } from 'motion/react';
 import { useEffect, useRef } from 'react';
 
 // React Bits style "CountUp": counts from 0 to a number when it scrolls into view.
-export default function CountUp({ to, duration = 1.4 }: { to: number; duration?: number }) {
+export default function CountUp({
+    to,
+    duration = 1.4,
+}: {
+    to: number;
+    duration?: number;
+}) {
     const ref = useRef<HTMLSpanElement>(null);
     const inView = useInView(ref, { once: true });
 

@@ -29,7 +29,14 @@ export default function Login({ status, canResetPassword }: Props) {
                         <div className="grid gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" type="email" name="email" required autoFocus placeholder="email@example.com" />
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    required
+                                    autoFocus
+                                    placeholder="email@example.com"
+                                />
                                 <InputError message={errors.email} />
                             </div>
 
@@ -37,12 +44,21 @@ export default function Login({ status, canResetPassword }: Props) {
                                 <div className="flex items-center">
                                     <Label htmlFor="password">Password</Label>
                                     {canResetPassword && (
-                                        <TextLink href="/forgot-password" className="ml-auto text-sm">
+                                        <TextLink
+                                            href="/forgot-password"
+                                            className="ml-auto text-sm"
+                                        >
                                             Forgot password?
                                         </TextLink>
                                     )}
                                 </div>
-                                <Input id="password" type="password" name="password" required placeholder="Password" />
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    required
+                                    placeholder="Password"
+                                />
                                 <InputError message={errors.password} />
                             </div>
 
@@ -51,13 +67,17 @@ export default function Login({ status, canResetPassword }: Props) {
                                 <Label htmlFor="remember">Remember me</Label>
                             </div>
 
-                            <Button type="submit" className="w-full mt-2" disabled={processing}>
+                            <Button
+                                type="submit"
+                                className="mt-2 w-full"
+                                disabled={processing}
+                            >
                                 {processing && <Spinner />}
                                 Log in
                             </Button>
                         </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
+                        <div className="text-muted-foreground text-center text-sm">
                             Don't have an account?{' '}
                             <TextLink href={register()}>Sign up</TextLink>
                         </div>
@@ -66,7 +86,9 @@ export default function Login({ status, canResetPassword }: Props) {
             </Form>
 
             {status && (
-                <div className="text-center text-sm font-medium text-green-600">{status}</div>
+                <div className="text-center text-sm font-medium text-green-600">
+                    {status}
+                </div>
             )}
         </>
     );

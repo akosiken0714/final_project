@@ -9,7 +9,9 @@ export default function GradientBackground() {
 
     useEffect(() => {
         const bigScreen = window.matchMedia('(min-width: 768px)').matches;
-        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const calm = window.matchMedia(
+            '(prefers-reduced-motion: reduce)',
+        ).matches;
         setOk(bigScreen && !calm);
     }, []);
 
@@ -23,12 +25,18 @@ export default function GradientBackground() {
             transition={{ duration: 2 }}
             style={{
                 // fade the bottom edge so it blends into the page
-                maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+                maskImage:
+                    'linear-gradient(to bottom, black 55%, transparent 100%)',
+                WebkitMaskImage:
+                    'linear-gradient(to bottom, black 55%, transparent 100%)',
             }}
             aria-hidden="true"
         >
-            <ShaderGradientCanvas style={{ position: 'absolute', inset: 0 }} pixelDensity={1} pointerEvents="none">
+            <ShaderGradientCanvas
+                style={{ position: 'absolute', inset: 0 }}
+                pixelDensity={1}
+                pointerEvents="none"
+            >
                 <ShaderGradient
                     control="props"
                     type="waterPlane"

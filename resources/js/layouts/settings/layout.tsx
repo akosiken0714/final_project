@@ -18,15 +18,18 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
     return (
         <Shell>
-            <p className="text-xs uppercase tracking-[0.3em] text-[#A9D3E6]">
+            <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
                 {isAdmin ? 'Admin account' : 'Account'}
             </p>
             <h1 className="mt-3 font-serif text-5xl md:text-6xl">
                 {isAdmin ? 'Admin ' : 'Your '}
-                <span className="italic text-[#F0A98B]">settings</span>
+                <span className="text-[#F0A98B] italic">settings</span>
             </h1>
 
-            <nav className="mt-8 flex gap-6 border-b border-[#F7F1E8]/15" aria-label="Settings">
+            <nav
+                className="mt-8 flex gap-6 border-b border-[#F7F1E8]/15"
+                aria-label="Settings"
+            >
                 {tabs.map((tab) => (
                     <Link
                         key={toUrl(tab.href)}

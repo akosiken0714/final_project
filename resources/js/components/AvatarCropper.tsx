@@ -18,10 +18,16 @@ export default function AvatarCropper({
     const [size, setSize] = useState<{ w: number; h: number } | null>(null); // the picture's real size
     const [zoom, setZoom] = useState(1); // 1 = just fills the square, 3 = three times closer
     const [pos, setPos] = useState({ x: 0, y: 0 }); // where the picture's top-left corner sits in the square
-    const drag = useRef<{ startX: number; startY: number; x: number; y: number } | null>(null);
+    const drag = useRef<{
+        startX: number;
+        startY: number;
+        x: number;
+        y: number;
+    } | null>(null);
 
     // How big the picture is drawn at a given zoom.
-    const scaleFor = (z: number) => (size ? Math.max(STAGE / size.w, STAGE / size.h) * z : 1);
+    const scaleFor = (z: number) =>
+        size ? Math.max(STAGE / size.w, STAGE / size.h) * z : 1;
 
     // Keeps the picture covering the whole square (no empty edges).
     const keepInside = (x: number, y: number, z: number) => {
@@ -46,14 +52,21 @@ export default function AvatarCropper({
 
     // Escape closes the window.
     useEffect(() => {
-        const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+        const esc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onCancel();
+        };
         document.addEventListener('keydown', esc);
         return () => document.removeEventListener('keydown', esc);
     }, [onCancel]);
 
     const down = (e: PointerEvent) => {
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-        drag.current = { startX: e.clientX, startY: e.clientY, x: pos.x, y: pos.y };
+        drag.current = {
+            startX: e.clientX,
+            startY: e.clientY,
+            x: pos.x,
+            y: pos.y,
+        };
     };
 
     const move = (e: PointerEvent) => {
@@ -63,7 +76,9 @@ export default function AvatarCropper({
         setPos(keepInside(nx, ny, zoom));
     };
 
-    const up = () => { drag.current = null; };
+    const up = () => {
+        drag.current = null;
+    };
 
     // Zooming keeps whatever is in the middle of the square in the middle.
     const changeZoom = (z: number) => {
@@ -73,7 +88,13 @@ export default function AvatarCropper({
         const centreX = (STAGE / 2 - pos.x) / oldS;
         const centreY = (STAGE / 2 - pos.y) / oldS;
         setZoom(z);
-        setPos(keepInside(STAGE / 2 - centreX * newS, STAGE / 2 - centreY * newS, z));
+        setPos(
+            keepInside(
+                STAGE / 2 - centreX * newS,
+                STAGE / 2 - centreY * newS,
+                z,
+            ),
+        );
     };
 
     // Draw the visible part onto a canvas and hand it back as a file.
@@ -90,10 +111,25 @@ export default function AvatarCropper({
 
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, OUTPUT, OUTPUT);
-        ctx.drawImage(img, -pos.x / s, -pos.y / s, STAGE / s, STAGE / s, 0, 0, OUTPUT, OUTPUT);
+        ctx.drawImage(
+            img,
+            -pos.x / s,
+            -pos.y / s,
+            STAGE / s,
+            STAGE / s,
+            0,
+            0,
+            OUTPUT,
+            OUTPUT,
+        );
 
         canvas.toBlob(
-            (blob) => { if (blob) onDone(new File([blob], 'profile.jpg', { type: 'image/jpeg' })); },
+            (blob) => {
+                if (blob)
+                    onDone(
+                        new File([blob], 'profile.jpg', { type: 'image/jpeg' }),
+                    );
+            },
             'image/jpeg',
             0.9,
         );
@@ -102,13 +138,21 @@ export default function AvatarCropper({
     const s = scaleFor(zoom);
 
     return (
-        <div role="dialog" aria-modal="true" aria-label="Crop your picture" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Crop your picture"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+        >
             <div className="bg-background text-foreground w-full max-w-sm rounded-2xl border p-5 shadow-2xl">
                 <p className="text-base font-semibold">Crop your picture</p>
-                <p className="text-muted-foreground mt-1 text-xs">Drag to move it. Use the slider to zoom. The circle is what people will see.</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                    Drag to move it. Use the slider to zoom. The circle is what
+                    people will see.
+                </p>
 
                 <div
-                    className="relative mx-auto mt-4 cursor-grab touch-none select-none overflow-hidden rounded-xl bg-black active:cursor-grabbing"
+                    className="relative mx-auto mt-4 cursor-grab touch-none overflow-hidden rounded-xl bg-black select-none active:cursor-grabbing"
                     style={{ width: STAGE, height: STAGE }}
                     onPointerDown={down}
                     onPointerMove={move}
@@ -152,10 +196,19 @@ export default function AvatarCropper({
                 </div>
 
                 <div className="mt-5 flex justify-end gap-2">
-                    <button type="button" onClick={onCancel} className="hover:bg-muted rounded-md border px-4 py-2 text-sm font-medium transition">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="hover:bg-muted rounded-md border px-4 py-2 text-sm font-medium transition"
+                    >
                         Cancel
                     </button>
-                    <button type="button" onClick={finish} disabled={!size} className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200">
+                    <button
+                        type="button"
+                        onClick={finish}
+                        disabled={!size}
+                        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
+                    >
                         Use this picture
                     </button>
                 </div>

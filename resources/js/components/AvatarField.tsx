@@ -25,17 +25,37 @@ export default function AvatarField({
     const [busy, setBusy] = useState(false);
     const [cropSrc, setCropSrc] = useState<string | null>(null); // the picture waiting to be cropped
 
-    useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
-    useEffect(() => () => { if (cropSrc) URL.revokeObjectURL(cropSrc); }, [cropSrc]);
+    useEffect(
+        () => () => {
+            if (preview) URL.revokeObjectURL(preview);
+        },
+        [preview],
+    );
+    useEffect(
+        () => () => {
+            if (cropSrc) URL.revokeObjectURL(cropSrc);
+        },
+        [cropSrc],
+    );
 
-    const clearInput = () => { if (fileRef.current) fileRef.current.value = ''; };
+    const clearInput = () => {
+        if (fileRef.current) fileRef.current.value = '';
+    };
 
     const choose = (file?: File | null) => {
         setError('');
         if (!file) return;
 
-        if (!ALLOWED.includes(file.type)) { setError('Please choose a JPG, PNG or WebP picture.'); clearInput(); return; }
-        if (file.size > MAX_MB * 1024 * 1024) { setError(`Please keep the picture under ${MAX_MB} MB.`); clearInput(); return; }
+        if (!ALLOWED.includes(file.type)) {
+            setError('Please choose a JPG, PNG or WebP picture.');
+            clearInput();
+            return;
+        }
+        if (file.size > MAX_MB * 1024 * 1024) {
+            setError(`Please keep the picture under ${MAX_MB} MB.`);
+            clearInput();
+            return;
+        }
 
         // Open the crop window first. The picture is only used after "Use this picture".
         setCropSrc(URL.createObjectURL(file));
@@ -52,11 +72,18 @@ export default function AvatarField({
 
         if (instant) {
             setBusy(true);
-            router.post('/settings/profile/avatar', { avatar: file }, {
-                forceFormData: true,
-                preserveScroll: true,
-                onFinish: () => { setBusy(false); clearInput(); },
-            });
+            router.post(
+                '/settings/profile/avatar',
+                { avatar: file },
+                {
+                    forceFormData: true,
+                    preserveScroll: true,
+                    onFinish: () => {
+                        setBusy(false);
+                        clearInput();
+                    },
+                },
+            );
             return;
         }
 
@@ -84,9 +111,15 @@ export default function AvatarField({
     return (
         <div className="flex items-center gap-4">
             {shown ? (
-                <img src={shown} alt="Your profile picture" className="h-20 w-20 rounded-full border object-cover" />
+                <img
+                    src={shown}
+                    alt="Your profile picture"
+                    className="h-20 w-20 rounded-full border object-cover"
+                />
             ) : (
-                <div className="bg-muted text-muted-foreground flex h-20 w-20 items-center justify-center rounded-full border text-xs">No photo</div>
+                <div className="bg-muted text-muted-foreground flex h-20 w-20 items-center justify-center rounded-full border text-xs">
+                    No photo
+                </div>
             )}
 
             <div className="grid gap-1">
@@ -95,10 +128,18 @@ export default function AvatarField({
                         htmlFor={`${name}-file`}
                         className="hover:bg-muted cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium transition"
                     >
-                        {busy ? 'Uploading…' : shown ? 'Change picture' : 'Add a picture'}
+                        {busy
+                            ? 'Uploading…'
+                            : shown
+                              ? 'Change picture'
+                              : 'Add a picture'}
                     </label>
                     {shown && (
-                        <button type="button" onClick={remove} className="text-muted-foreground hover:text-foreground rounded-md px-3 py-1.5 text-sm transition">
+                        <button
+                            type="button"
+                            onClick={remove}
+                            className="text-muted-foreground hover:text-foreground rounded-md px-3 py-1.5 text-sm transition"
+                        >
                             Remove
                         </button>
                     )}
@@ -113,10 +154,19 @@ export default function AvatarField({
                     className="sr-only"
                     onChange={(e) => choose(e.target.files?.[0])}
                 />
-                <p className="text-muted-foreground text-xs">JPG, PNG or WebP. You&apos;ll be able to crop it after you choose.</p>
+                <p className="text-muted-foreground text-xs">
+                    JPG, PNG or WebP. You&apos;ll be able to crop it after you
+                    choose.
+                </p>
                 {message && <p className="text-sm text-red-600">{message}</p>}
             </div>
-        {cropSrc && <AvatarCropper src={cropSrc} onCancel={cancelCrop} onDone={cropped} />}
+            {cropSrc && (
+                <AvatarCropper
+                    src={cropSrc}
+                    onCancel={cancelCrop}
+                    onDone={cropped}
+                />
+            )}
         </div>
     );
 }

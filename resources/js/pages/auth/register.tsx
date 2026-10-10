@@ -32,11 +32,16 @@ export default function Register({ passwordRules }: Props) {
 
                             <div className="grid gap-2">
                                 <Label>Profile picture (optional)</Label>
-                                <AvatarField name="avatar" serverError={errors.avatar} />
+                                <AvatarField
+                                    name="avatar"
+                                    serverError={errors.avatar}
+                                />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name <Req /></Label>
+                                <Label htmlFor="name">
+                                    Name <Req />
+                                </Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -54,7 +59,9 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address <Req /></Label>
+                                <Label htmlFor="email">
+                                    Email address <Req />
+                                </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -67,8 +74,10 @@ export default function Register({ passwordRules }: Props) {
                                 <InputError message={errors.email} />
                             </div>
 
-                                                        <div className="grid gap-2">
-                                <Label htmlFor="phone">Contact number <Req /></Label>
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">
+                                    Contact number <Req />
+                                </Label>
                                 <Input
                                     id="phone"
                                     type="tel"
@@ -77,7 +86,13 @@ export default function Register({ passwordRules }: Props) {
                                     maxLength={16}
                                     pattern="(09|\+639)[0-9 \-]{9,12}"
                                     title="09XX XXX XXXX or +63 9XX XXX XXXX"
-                                    onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/[^\d+\s-]/g, ''); }}
+                                    onInput={(e) => {
+                                        e.currentTarget.value =
+                                            e.currentTarget.value.replace(
+                                                /[^\d+\s-]/g,
+                                                '',
+                                            );
+                                    }}
                                     autoComplete="tel"
                                     name="phone"
                                     placeholder="09XX XXX XXXX"
@@ -86,7 +101,9 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="address">Address (optional)</Label>
+                                <Label htmlFor="address">
+                                    Address (optional)
+                                </Label>
                                 <Input
                                     id="address"
                                     type="text"
@@ -98,7 +115,9 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Password <Req /></Label>
+                                <Label htmlFor="password">
+                                    Password <Req />
+                                </Label>
                                 <PasswordInput
                                     id="password"
                                     required
@@ -110,7 +129,9 @@ export default function Register({ passwordRules }: Props) {
                                 />
                                 <InputError message={errors.password} />
                                 <p className="text-muted-foreground text-xs">
-                                    Use a long password you don&apos;t use anywhere else. You can pin your usual pickup spot on the map later in Settings.
+                                    Use a long password you don&apos;t use
+                                    anywhere else. You can pin your usual pickup
+                                    spot on the map later in Settings.
                                 </p>
                             </div>
 

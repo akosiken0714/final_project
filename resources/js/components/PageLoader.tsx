@@ -121,35 +121,85 @@ export default function PageLoader() {
             {/* soft glow + grain, first load only */}
             {isFirst && (
                 <>
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5C8CA8]/15 blur-3xl" aria-hidden="true" />
-            <div
-                className="pointer-events-none absolute inset-0 opacity-[0.04]"
-                style={{ backgroundImage: 'repeating-linear-gradient(45deg, #F7F1E8 0 1px, transparent 1px 3px), repeating-linear-gradient(-45deg, #F7F1E8 0 1px, transparent 1px 3px)' }}
-                aria-hidden="true"
-            />
+                    <div
+                        className="pointer-events-none absolute top-1/2 left-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5C8CA8]/15 blur-3xl"
+                        aria-hidden="true"
+                    />
+                    <div
+                        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+                        style={{
+                            backgroundImage:
+                                'repeating-linear-gradient(45deg, #F7F1E8 0 1px, transparent 1px 3px), repeating-linear-gradient(-45deg, #F7F1E8 0 1px, transparent 1px 3px)',
+                        }}
+                        aria-hidden="true"
+                    />
                 </>
             )}
 
             <div className="relative z-10 flex flex-col items-center">
                 {/* a sewn-on button, slowly turning inside a stitched ring */}
-                <svg viewBox="0 0 120 120" className="pl-in h-28 w-28" aria-hidden="true">
+                <svg
+                    viewBox="0 0 120 120"
+                    className="pl-in h-28 w-28"
+                    aria-hidden="true"
+                >
                     <g className="pl-spin-rev">
-                        <circle cx="60" cy="60" r="54" fill="none" stroke="#F7F1E8" strokeOpacity="0.28" strokeWidth="1.5" strokeDasharray="2 7" strokeLinecap="round" />
+                        <circle
+                            cx="60"
+                            cy="60"
+                            r="54"
+                            fill="none"
+                            stroke="#F7F1E8"
+                            strokeOpacity="0.28"
+                            strokeWidth="1.5"
+                            strokeDasharray="2 7"
+                            strokeLinecap="round"
+                        />
                     </g>
                     <g className="pl-spin">
                         <circle cx="60" cy="60" r="32" fill="#F0A98B" />
-                        <circle cx="60" cy="60" r="23" fill="none" stroke="#0F1E2B" strokeOpacity="0.28" strokeWidth="1.5" />
-                        {[[-7, -7], [7, -7], [-7, 7], [7, 7]].map(([dx, dy], i) => (
-                            <circle key={i} cx={60 + dx} cy={60 + dy} r="3.4" fill="#0F1E2B" />
+                        <circle
+                            cx="60"
+                            cy="60"
+                            r="23"
+                            fill="none"
+                            stroke="#0F1E2B"
+                            strokeOpacity="0.28"
+                            strokeWidth="1.5"
+                        />
+                        {[
+                            [-7, -7],
+                            [7, -7],
+                            [-7, 7],
+                            [7, 7],
+                        ].map(([dx, dy], i) => (
+                            <circle
+                                key={i}
+                                cx={60 + dx}
+                                cy={60 + dy}
+                                r="3.4"
+                                fill="#0F1E2B"
+                            />
                         ))}
-                        <path d="M53 53 L67 67 M67 53 L53 67" stroke="#F7F1E8" strokeWidth="2" strokeLinecap="round" />
+                        <path
+                            d="M53 53 L67 67 M67 53 L53 67"
+                            stroke="#F7F1E8"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                        />
                     </g>
                 </svg>
 
-                <p className="pl-in mt-6 font-serif text-4xl text-[#F7F1E8]" style={{ animationDelay: '.15s' }}>
-                    PhineWash<span className="italic text-[#F0A98B]">.</span>
+                <p
+                    className="pl-in mt-6 font-serif text-4xl text-[#F7F1E8]"
+                    style={{ animationDelay: '.15s' }}
+                >
+                    PhineWash<span className="text-[#F0A98B] italic">.</span>
                 </p>
-                <p className="pl-in pl-pulse mt-3 text-[11px] uppercase tracking-[0.35em] text-[#A9D3E6]" style={{ animationDelay: '.3s' }}>
+                <p
+                    className="pl-in pl-pulse mt-3 text-[11px] tracking-[0.35em] text-[#A9D3E6] uppercase"
+                    style={{ animationDelay: '.3s' }}
+                >
                     Naglalaba pa…
                 </p>
             </div>

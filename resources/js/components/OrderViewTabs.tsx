@@ -3,10 +3,22 @@ import { router } from '@inertiajs/react';
 type Tab = { key: string; label: string; count: number };
 
 const visit = (url: string, data: Record<string, string | number>) =>
-    router.get(url, data, { preserveScroll: true, preserveState: true, replace: true });
+    router.get(url, data, {
+        preserveScroll: true,
+        preserveState: true,
+        replace: true,
+    });
 
 // Ongoing / Finished tabs. The server does the filtering, so only the current tab is loaded.
-export function OrderViewTabs({ url, tabs, current }: { url: string; tabs: Tab[]; current: string }) {
+export function OrderViewTabs({
+    url,
+    tabs,
+    current,
+}: {
+    url: string;
+    tabs: Tab[];
+    current: string;
+}) {
     return (
         <div className="mt-10 flex flex-wrap gap-2" role="tablist">
             {tabs.map((t) => {
@@ -23,7 +35,14 @@ export function OrderViewTabs({ url, tabs, current }: { url: string; tabs: Tab[]
                                 : 'border border-[#F7F1E8]/25 text-[#F7F1E8]/70 hover:bg-[#F7F1E8]/10'
                         }`}
                     >
-                        {t.label} <span className={on ? 'text-[#0F1E2B]/60' : 'text-[#F7F1E8]/45'}>{t.count}</span>
+                        {t.label}{' '}
+                        <span
+                            className={
+                                on ? 'text-[#0F1E2B]/60' : 'text-[#F7F1E8]/45'
+                            }
+                        >
+                            {t.count}
+                        </span>
                     </button>
                 );
             })}
@@ -32,7 +51,17 @@ export function OrderViewTabs({ url, tabs, current }: { url: string; tabs: Tab[]
 }
 
 // "Load more" for the Finished / Archived tabs (10 at a time).
-export function LoadMore({ url, view, nextLimit, show }: { url: string; view: string; nextLimit: number; show: boolean }) {
+export function LoadMore({
+    url,
+    view,
+    nextLimit,
+    show,
+}: {
+    url: string;
+    view: string;
+    nextLimit: number;
+    show: boolean;
+}) {
     if (!show) return null;
     return (
         <div className="mt-6 text-center">

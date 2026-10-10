@@ -2,7 +2,10 @@ import { PropsWithChildren, useRef } from 'react';
 import { motion, useMotionTemplate, useMotionValue } from 'motion/react';
 
 // React Bits style "SpotlightCard": a soft light follows your mouse over the card.
-export default function SpotlightCard({ children, className = '' }: PropsWithChildren<{ className?: string }>) {
+export default function SpotlightCard({
+    children,
+    className = '',
+}: PropsWithChildren<{ className?: string }>) {
     const ref = useRef<HTMLDivElement>(null);
     const x = useMotionValue(-200);
     const y = useMotionValue(-200);
@@ -16,8 +19,16 @@ export default function SpotlightCard({ children, className = '' }: PropsWithChi
     };
 
     return (
-        <div ref={ref} onPointerMove={move} className={`relative overflow-hidden ${className}`}>
-            <motion.div className="pointer-events-none absolute inset-0" style={{ background: glow }} aria-hidden="true" />
+        <div
+            ref={ref}
+            onPointerMove={move}
+            className={`relative overflow-hidden ${className}`}
+        >
+            <motion.div
+                className="pointer-events-none absolute inset-0"
+                style={{ background: glow }}
+                aria-hidden="true"
+            />
             <div className="relative">{children}</div>
         </div>
     );
