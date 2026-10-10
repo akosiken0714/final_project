@@ -68,7 +68,7 @@ class HistoryController extends Controller
 
             foreach ($query->cursor() as $l) {
                 fputcsv($out, [
-                    $l->created_at?->setTimezone(self::TZ)->format('Y-m-d H:i'),
+                    optional(optional($l->created_at)->setTimezone(self::TZ))->format('Y-m-d H:i'),
                     $l->event,
                     $this->csvSafe($l->user->name ?? 'System'),
                     $l->order_id,
