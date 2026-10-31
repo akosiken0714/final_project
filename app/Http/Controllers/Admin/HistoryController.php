@@ -84,9 +84,9 @@ class HistoryController extends Controller
      */
     private function filters(Request $request): array
     {
-        $type = array_key_exists((string) $request->query('type'), self::TYPES) ? (string) $request->query('type') : 'all';
+        $type = array_key_exists($this->text($request, 'type'), self::TYPES) ? $this->text($request, 'type') : 'all';
 
-        return [$type, trim((string) $request->query('q', ''))];
+        return [$type, trim($this->text($request, 'q'))];
     }
 
     /**

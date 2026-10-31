@@ -27,12 +27,12 @@ const LABELS: Record<string, string> = {
 
 const tone = (event: string) =>
     event.startsWith('payment.failed')
-        ? 'bg-[#C4441F]/15 text-[#C4441F]'
+        ? 'bg-pw-danger/15 text-pw-danger'
         : event.startsWith('payment.')
-          ? 'bg-[#2f7d52]/15 text-[#2f7d52]'
+          ? 'bg-pw-ok/15 text-pw-ok'
           : event.startsWith('order.')
-            ? 'bg-[#5C8CA8]/25 text-[#1f4a63]'
-            : 'bg-[#0F1E2B]/10 text-[#0F1E2B]';
+            ? 'bg-pw-steel/25 text-pw-deep'
+            : 'bg-pw-ink/10 text-pw-ink';
 
 export default function History({ logs, type, q, types, received }: any) {
     const [search, setSearch] = useState(q ?? '');
@@ -51,13 +51,13 @@ export default function History({ logs, type, q, types, received }: any) {
     return (
         <Shell>
             <Head title="History" />
-            <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+            <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                 Admin
             </p>
-            <h1 className="mt-3 font-serif text-5xl md:text-6xl">
-                Shop <span className="text-[#F0A98B] italic">history</span>
+            <h1 className="mt-3 font-serif text-4xl md:text-5xl">
+                Shop <span className="text-pw-peach italic">history</span>
             </h1>
-            <p className="mt-3 max-w-xl text-[#F7F1E8]/60">
+            <p className="mt-3 max-w-xl text-pw-cream/60">
                 Every order, status change, payment and admin action, newest
                 first. Times are Philippine time.
             </p>
@@ -66,15 +66,15 @@ export default function History({ logs, type, q, types, received }: any) {
                 {cards.map(([label, val]) => (
                     <div
                         key={label as string}
-                        className="rounded-3xl bg-[#F7F1E8] p-5 text-[#0F1E2B] shadow-xl"
+                        className="rounded-3xl bg-pw-cream p-5 text-pw-ink shadow-xl"
                     >
-                        <p className="text-[10px] tracking-[0.25em] text-[#0F1E2B]/55 uppercase">
+                        <p className="text-xs tracking-[0.18em] text-pw-ink/70 uppercase">
                             {label}
                         </p>
                         <p className="mt-1 font-serif text-4xl">
                             {peso(val as number)}
                         </p>
-                        <p className="text-xs text-[#0F1E2B]/50">
+                        <p className="text-xs text-pw-ink/70">
                             money received (cash + GCash)
                         </p>
                     </div>
@@ -88,14 +88,14 @@ export default function History({ logs, type, q, types, received }: any) {
                         onClick={() =>
                             go({ type: key, ...(search ? { q: search } : {}) })
                         }
-                        className={`rounded-full border px-4 py-1.5 text-sm transition ${key === type ? 'border-[#F0A98B] bg-[#F0A98B] font-semibold text-[#0F1E2B]' : 'border-[#F7F1E8]/30 text-[#F7F1E8] hover:border-[#F0A98B]'}`}
+                        className={`rounded-full border px-4 py-1.5 text-sm transition ${key === type ? 'border-pw-peach bg-pw-peach font-semibold text-pw-ink' : 'border-pw-cream/30 text-pw-cream hover:border-pw-peach'}`}
                     >
                         {label as string}
                     </button>
                 ))}
                 <a
                     href={`/admin/history/export?${qs}`}
-                    className="ml-auto rounded-full border border-[#F7F1E8]/30 px-4 py-1.5 text-sm text-[#F7F1E8] transition hover:border-[#F0A98B] hover:text-[#F0A98B]"
+                    className="ml-auto rounded-full border border-pw-cream/30 px-4 py-1.5 text-sm text-pw-cream transition hover:border-pw-peach hover:text-pw-peach"
                 >
                     Download CSV
                 </a>
@@ -116,16 +116,16 @@ export default function History({ logs, type, q, types, received }: any) {
                     onChange={(e) => setSearch(e.target.value)}
                     aria-label="Search history"
                     placeholder="Search a name, order #0012, GCash..."
-                    className="w-full rounded-full border border-[#F7F1E8]/25 bg-transparent px-4 py-2 text-sm text-[#F7F1E8] outline-none placeholder:text-[#F7F1E8]/40 focus:border-[#F0A98B]"
+                    className="w-full rounded-full border border-pw-cream/25 bg-transparent px-4 py-2 text-sm text-pw-cream outline-none placeholder:text-pw-cream/65 focus:border-pw-peach"
                 />
-                <button className="rounded-full bg-[#F7F1E8] px-5 py-2 text-sm font-semibold text-[#0F1E2B] transition hover:bg-[#F0A98B]">
+                <button className="rounded-full bg-pw-cream px-5 py-2 text-sm font-semibold text-pw-ink transition hover:bg-pw-peach">
                     Search
                 </button>
             </form>
 
-            <div className="mt-6 overflow-x-auto rounded-3xl bg-[#F7F1E8] text-[#0F1E2B] shadow-xl">
+            <div className="mt-6 overflow-x-auto rounded-3xl bg-pw-cream text-pw-ink shadow-xl">
                 <table className="w-full text-left text-sm">
-                    <thead className="text-[10px] tracking-[0.2em] text-[#0F1E2B]/55 uppercase">
+                    <thead className="text-xs tracking-[0.2em] text-pw-ink/70 uppercase">
                         <tr>
                             <th className="px-4 py-4">When</th>
                             <th className="px-4 py-4">Type</th>
@@ -138,7 +138,7 @@ export default function History({ logs, type, q, types, received }: any) {
                             <tr>
                                 <td
                                     colSpan={4}
-                                    className="px-4 py-10 text-center text-[#0F1E2B]/55"
+                                    className="px-4 py-10 text-center text-pw-ink/70"
                                 >
                                     Nothing here yet. New activity shows up as
                                     it happens.
@@ -148,9 +148,9 @@ export default function History({ logs, type, q, types, received }: any) {
                         {logs.data.map((l: any) => (
                             <tr
                                 key={l.id}
-                                className="border-t border-[#0F1E2B]/10 align-top"
+                                className="border-t border-pw-ink/10 align-top"
                             >
-                                <td className="px-4 py-3 text-xs whitespace-nowrap text-[#0F1E2B]/65">
+                                <td className="px-4 py-3 text-xs whitespace-nowrap text-pw-ink/70">
                                     {l.at ? when(l.at) : ''}
                                 </td>
                                 <td className="px-4 py-3">
@@ -161,7 +161,7 @@ export default function History({ logs, type, q, types, received }: any) {
                                     </span>
                                 </td>
                                 <td className="px-4 py-3">{l.summary}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-[#0F1E2B]/65">
+                                <td className="px-4 py-3 whitespace-nowrap text-pw-ink/70">
                                     {l.who}
                                 </td>
                             </tr>
@@ -171,12 +171,12 @@ export default function History({ logs, type, q, types, received }: any) {
             </div>
 
             {(logs.prev_page_url || logs.next_page_url) && (
-                <div className="mt-6 flex items-center justify-between text-sm text-[#F7F1E8]/70">
+                <div className="mt-6 flex items-center justify-between text-sm text-pw-cream/70">
                     {logs.prev_page_url ? (
                         <Link
                             href={logs.prev_page_url}
                             preserveScroll
-                            className="rounded-full border border-[#F7F1E8]/30 px-4 py-1.5 hover:border-[#F0A98B]"
+                            className="rounded-full border border-pw-cream/30 px-4 py-1.5 hover:border-pw-peach"
                         >
                             ← Newer
                         </Link>
@@ -190,7 +190,7 @@ export default function History({ logs, type, q, types, received }: any) {
                         <Link
                             href={logs.next_page_url}
                             preserveScroll
-                            className="rounded-full border border-[#F7F1E8]/30 px-4 py-1.5 hover:border-[#F0A98B]"
+                            className="rounded-full border border-pw-cream/30 px-4 py-1.5 hover:border-pw-peach"
                         >
                             Older →
                         </Link>

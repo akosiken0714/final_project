@@ -2,14 +2,28 @@ import { router } from '@inertiajs/react';
 
 type Tab = { key: string; label: string; count: number };
 
-const visit = (url: string, data: Record<string, string | number>) =>
-    router.get(url, data, {
+// Keeps the active search and filters (?q, status, pay, from, to) when switching tabs or loading more.
+const KEEP = ['q', 'status', 'pay', 'from', 'to'];
+
+const visit = (url: string, data: Record<string, string | number>) => {
+    const params: Record<string, string | number> = { ...data };
+
+    if (typeof window !== 'undefined') {
+        const now = new URLSearchParams(window.location.search);
+        KEEP.forEach((k) => {
+            const v = now.get(k);
+            if (v) params[k] = v;
+        });
+    }
+
+    router.get(url, params, {
         preserveScroll: true,
         preserveState: true,
         replace: true,
     });
+};
 
-// Ongoing / Finished tabs. The server does the filtering, so only the current tab is loaded.
+// Ongoing / Finished (and, for the admin, Cancelled) tabs. The server does the filtering, so only the current tab is loaded.
 export function OrderViewTabs({
     url,
     tabs,
@@ -31,14 +45,14 @@ export function OrderViewTabs({
                         onClick={() => !on && visit(url, { view: t.key })}
                         className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
                             on
-                                ? 'bg-[#F7F1E8] text-[#0F1E2B]'
-                                : 'border border-[#F7F1E8]/25 text-[#F7F1E8]/70 hover:bg-[#F7F1E8]/10'
+                                ? 'bg-pw-cream text-pw-ink'
+                                : 'border border-pw-cream/25 text-pw-cream/70 hover:bg-pw-cream/10'
                         }`}
                     >
                         {t.label}{' '}
                         <span
                             className={
-                                on ? 'text-[#0F1E2B]/60' : 'text-[#F7F1E8]/45'
+                                on ? 'text-pw-ink/70' : 'text-pw-cream/65'
                             }
                         >
                             {t.count}
@@ -67,7 +81,7 @@ export function LoadMore({
         <div className="mt-6 text-center">
             <button
                 onClick={() => visit(url, { view, limit: nextLimit })}
-                className="rounded-full border border-[#F7F1E8]/25 px-6 py-2 text-sm font-semibold text-[#F7F1E8] transition hover:bg-[#F7F1E8]/10"
+                className="rounded-full border border-pw-cream/25 px-6 py-2 text-sm font-semibold text-pw-cream transition hover:bg-pw-cream/10"
             >
                 Load more
             </button>

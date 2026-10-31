@@ -18,7 +18,7 @@ export default function Flash() {
     return (
         <div
             role="status"
-            className="fixed top-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-[#F0A98B] px-6 py-3 text-sm font-semibold text-[#0F1E2B] shadow-xl"
+            className="fixed top-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-pw-peach px-6 py-3 text-sm font-semibold text-pw-ink shadow-xl"
         >
             {msg}
         </div>

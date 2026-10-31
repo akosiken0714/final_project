@@ -8,6 +8,12 @@
 @custom-variant dark (&:is(.never-dark *));
 
 @theme {
+    /* PhineWash brand colors: use as bg-pw-navy, text-pw-cream, border-pw-peach ... */
+    --color-pw-navy: #0b1f26;
+    --color-pw-cream: #f7f1e8;
+    --color-pw-peach: #f0a98b;
+    --color-pw-sky: #a9d3e6;
+
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
@@ -236,10 +242,10 @@ html {
 
 .reveal {
     opacity: 0;
-    transform: translateY(40px);
+    transform: translateY(16px);
     transition:
-        opacity 0.9s ease,
-        transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+        opacity 0.3s ease,
+        transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .reveal.show {
     opacity: 1;
@@ -600,3 +606,151 @@ html {
     box-shadow: 0 0 0 1000px #f7f1e8 inset;
     transition: background-color 9999s ease-in-out 0s;
 }
+
+/* ---------- keyboard focus: a clear peach ring on every link, button and FAQ question ---------- */
+@layer base {
+    a:focus-visible,
+    button:focus-visible,
+    summary:focus-visible,
+    [role='button']:focus-visible {
+        outline: 2px solid #f0a98b;
+        outline-offset: 2px;
+    }
+}
+
+/* ---------- less motion: if the visitor asked for it, nothing moves ---------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .reveal,
+    .drop {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+
+/* ---------- look & feel pass 1 (uses only the brand colors above) ---------- */
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+    body {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+    h1,
+    h2,
+    h3 {
+        text-wrap: balance;
+    }
+    p {
+        text-wrap: pretty;
+    }
+    ::selection {
+        background: var(--color-pw-peach);
+        color: var(--color-pw-navy);
+    }
+
+    /* Dropdown lists (<select>): the browser draws the open list on a light panel, but the closed box often has
+       light text on a dark page. Give every list item its own solid colors so the options are always readable. */
+    select option,
+    select optgroup {
+        background-color: #f7f1e8;
+        color: #0f1e2b;
+    }
+    select option:disabled {
+        color: rgba(15, 30, 43, 0.45);
+    }
+    select option:checked {
+        background-color: #f0a98b;
+        color: #0f1e2b;
+    }
+}
+
+@layer components {
+    /* Cream "paper" surface: a soft top highlight and a layered shadow, so cards feel like real paper. */
+    .paper {
+        background: var(--color-pw-cream);
+        color: #0f1e2b;
+        border-radius: 1.75rem;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.7),
+            0 1px 2px rgba(6, 17, 22, 0.3),
+            0 22px 40px -18px rgba(6, 17, 22, 0.65);
+    }
+
+    /* One button shape everywhere: 44px tall, 150ms, small lift on hover, small press on tap. */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.625rem 1.5rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.2;
+        transition:
+            background-color 150ms ease,
+            color 150ms ease,
+            border-color 150ms ease,
+            transform 150ms ease;
+    }
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+    .btn:active:not(:disabled) {
+        transform: translateY(0) scale(0.98);
+    }
+    .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+    .btn-cream {
+        background: var(--color-pw-cream);
+        color: #0f1e2b;
+    }
+    .btn-cream:hover:not(:disabled) {
+        background: var(--color-pw-peach);
+    }
+    .btn-navy {
+        background: #0f1e2b;
+        color: var(--color-pw-cream);
+    }
+    .btn-navy:hover:not(:disabled) {
+        background: var(--color-pw-peach);
+        color: #0f1e2b;
+    }
+    .btn-ghost {
+        border: 1px solid rgba(247, 241, 232, 0.25);
+        color: var(--color-pw-cream);
+    }
+    .btn-ghost:hover:not(:disabled) {
+        background: rgba(247, 241, 232, 0.1);
+    }
+
+    /* Page content eases in (220ms) when you open a page. */
+    .pw-enter {
+        animation: pw-enter 220ms ease-out both;
+    }
+}
+
+@keyframes pw-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@import './polish.css';

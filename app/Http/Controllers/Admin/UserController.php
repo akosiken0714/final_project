@@ -11,7 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-// Lets an admin create an account for someone (a walk-in customer, or another staff member).
+// Lets the admin create a customer account for someone (e.g. a walk-in). The admin is the only admin: this form
+// never creates admin or staff accounts.
 class UserController extends Controller
 {
     use PasswordValidationRules, ProfileValidationRules;
@@ -25,9 +26,8 @@ class UserController extends Controller
             ...$this->profileRules(),
             'phone' => $this->phoneRules(false),
             'address' => ['nullable', 'string', 'max:255'],
-            'role' => ['required', 'in:customer,admin'],
             'password' => $this->passwordRules(),
-            // Creating accounts (admins especially) needs the admin's own password.
+            // Creating accounts needs the admin's own password.
             'admin_password' => ['required', 'current_password'],
         ], $this->phoneMessages() + ['admin_password.current_password' => 'Your admin password is not correct.'])->validate();
 
@@ -39,13 +39,13 @@ class UserController extends Controller
             'phone' => $data['phone'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
-        // role is never mass-assigned: only this admin-only form can set it
-        $user->role = $data['role'];
+        // role is never mass-assigned and is always a customer here
+        $user->role = User::CUSTOMER;
         // The admin vouches for this person, so no email-verification step is needed.
         $user->forceFill(['email_verified_at' => now()]);
         $user->save();
 
-        Activity::log('user.created', "Account created: {$user->name} ({$data['role']})", null, $request->user()->id);
+        Activity::log('user.created', "Account created: {$user->name} (customer)", null, $request->user()->id);
 
         return back()->with('success', "Account created for {$user->name}. Share the password with them privately.");
     }

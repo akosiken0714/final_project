@@ -37,14 +37,26 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+        // Passwords: at least 8 characters with a BIG letter, a small letter and a number. No symbols needed.
+        // - Live site: also refuses passwords that appeared in known data leaks (needs internet).
+        // - Your own computer (local): same rules, so what you test is what customers get.
+        // - Automated tests: Laravel's light default (8 characters), because older tests use simple passwords.
+        Password::defaults(function (): ?Password {
+            if (app()->runningUnitTests()) {
+                return null;
+            }
+
+            return self::strongPassword(checkLeaks: app()->isProduction());
+        });
+    }
+
+    /**
+     * The password rule customers must follow (kept in one place so the tests use the real thing).
+     */
+    public static function strongPassword(bool $checkLeaks = false): Password
+    {
+        $rule = Password::min(8)->mixedCase()->numbers();
+
+        return $checkLeaks ? $rule->uncompromised() : $rule;
     }
 }

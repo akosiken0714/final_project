@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class Order extends Model
@@ -16,6 +18,9 @@ class Order extends Model
         'user_id', 'service_id', 'quantity', 'total', 'instructions', 'address', 'photo', 'status',
         'fulfillment', 'lat', 'lng', 'distance_km', 'delivery_fee',
         'payment_method', 'payment_status', 'payment_reference', 'paid_at',
+        'pickup_date', 'pickup_slot',
+        'estimated_quantity', 'weighed_at', 'cancel_reason',
+        'source', 'created_by',
     ];
 
     protected $appends = ['photo_url', 'amount_due'];
@@ -26,6 +31,8 @@ class Order extends Model
         'distance_km' => 'float',
         'delivery_fee' => 'float',
         'paid_at' => 'datetime',
+        'weighed_at' => 'datetime',
+        'pickup_date' => 'date:Y-m-d',
     ];
 
     // Where an order is in its life:
@@ -35,6 +42,10 @@ class Order extends Model
     const READY = 'Ready for Pickup';
 
     const CLAIMED = 'Completed';
+
+    // Set when the customer cancels a Pending order. Deliberately NOT in STATUSES, so the admin status
+    // dropdown, analytics and report keep working exactly as before.
+    const CANCELLED = 'Cancelled';
 
     // How the laundry gets to and from the customer.
     const DELIVERY = 'delivery';   // we collect it and bring it back (delivery fee applies)
@@ -48,7 +59,15 @@ class Order extends Model
 
     const GCASH = 'gcash';
 
+    // Optional pickup / drop-off time slots.
+    const SLOTS = ['morning', 'afternoon'];
+
     const PAYMENT_METHODS = [self::CASH, self::GCASH];
+
+    // Where the order came from: the customer placed it on the site, or staff typed it in at the counter.
+    const ONLINE = 'online';
+
+    const WALK_IN = 'walk_in';
 
     const UNPAID = 'unpaid';
 
@@ -71,7 +90,13 @@ class Order extends Model
 
     protected static function booted(): void
     {
-        static::deleting(fn (Order $order) => $order->deletePhotoFiles());
+        static::deleting(function (Order $order) {
+            $order->deletePhotoFiles();
+            // The counter photo is a file too. (Only when the intake table exists, so a not-yet-migrated site keeps working.)
+            if (Schema::hasTable('order_intakes')) {
+                OrderIntake::deleteFile($order->intake?->photo);
+            }
+        });
     }
 
     // Removes the photo from every disk it could be on.
@@ -108,6 +133,27 @@ class Order extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * @return HasOne<OrderRating, $this>
+     */
+    public function rating(): HasOne
+    {
+        return $this->hasOne(OrderRating::class);
+    }
+
+    /**
+     * @return HasOne<OrderIntake, $this>
+     */
+    public function intake(): HasOne
+    {
+        return $this->hasOne(OrderIntake::class);
+    }
+
+    public function isWalkIn(): bool
+    {
+        return $this->source === self::WALK_IN;
     }
 
     public function getPhotoUrlAttribute(): ?string

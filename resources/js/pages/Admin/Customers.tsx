@@ -1,12 +1,12 @@
 import Req from '@/components/Req';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import Shell from '@/components/Shell';
 import UserAvatar from '@/components/UserAvatar';
 
 const input =
-    'mt-1 w-full rounded-xl border border-[#0F1E2B]/25 bg-white px-3 py-2 text-sm text-[#0F1E2B] outline-none focus:border-[#0F1E2B]';
-const label = 'text-[10px] uppercase tracking-[0.25em] text-[#0F1E2B]/55';
+    'mt-1 w-full rounded-xl border border-pw-ink/25 bg-white px-3 py-2 text-sm text-pw-ink outline-none focus:border-pw-ink';
+const label = 'text-xs uppercase tracking-[0.18em] text-pw-ink/70';
 
 // A random password the admin can hand to the new person (they can change it in Settings > Security).
 function makePassword() {
@@ -22,9 +22,10 @@ export default function Customers({
     search = '',
     totals,
 }: {
-    customers: any[];
+    // a Laravel paginator: the people are in customers.data
+    customers: any;
     search?: string;
-    totals?: { customers: number; admins: number };
+    totals?: { customers: number };
 }) {
     const [open, setOpen] = useState(false);
     const [q, setQ] = useState(search);
@@ -34,7 +35,6 @@ export default function Customers({
         email: '',
         phone: '',
         address: '',
-        role: 'customer',
         password: '',
         password_confirmation: '',
         admin_password: '',
@@ -69,40 +69,40 @@ export default function Customers({
 
     return (
         <Shell>
-            <Head title="People" />
-            <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+            <Head title="Customers" />
+            <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                 Admin
             </p>
             <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-                <h1 className="font-serif text-5xl md:text-6xl">
-                    Our <span className="text-[#F0A98B] italic">customers</span>
+                <h1 className="font-serif text-4xl md:text-5xl">
+                    Our <span className="text-pw-peach italic">customers</span>
                 </h1>
                 <button
                     type="button"
                     onClick={() => setOpen((o) => !o)}
-                    className="rounded-full bg-[#F0A98B] px-6 py-2.5 text-sm font-semibold text-[#0B1F26] transition hover:-translate-y-0.5 hover:bg-[#F7F1E8]"
+                    className="rounded-full bg-pw-peach px-6 py-2.5 text-sm font-semibold text-pw-navy transition hover:-translate-y-0.5 hover:bg-pw-cream"
                 >
-                    {open ? 'Close' : '+ Add a person'}
+                    {open ? 'Close' : '+ Add a customer'}
                 </button>
             </div>
             {totals && (
-                <p className="mt-3 text-sm text-[#F7F1E8]/60">
-                    {totals.customers} customers · {totals.admins} admins
+                <p className="mt-3 text-sm text-pw-cream/60">
+                    {totals.customers} customers
                 </p>
             )}
 
             {open && (
                 <form
                     onSubmit={submit}
-                    className="mt-8 grid gap-4 rounded-3xl bg-[#F7F1E8] p-6 text-[#0F1E2B] shadow-xl md:grid-cols-2"
+                    className="mt-8 grid gap-4 rounded-3xl bg-pw-cream p-6 text-pw-ink shadow-xl md:grid-cols-2"
                 >
-                    <p className="text-xs text-[#0F1E2B]/55 md:col-span-2">
+                    <p className="text-xs text-pw-ink/70 md:col-span-2">
                         <span className="font-semibold text-red-600">*</span>{' '}
                         required
                     </p>
                     <div className="md:col-span-2">
                         <p className="font-serif text-2xl">New account</p>
-                        <p className="text-xs text-[#0F1E2B]/60">
+                        <p className="text-xs text-pw-ink/70">
                             Great for walk-in customers. They can add a picture
                             and their usual spot in Settings after they log in.
                         </p>
@@ -156,21 +156,6 @@ export default function Customers({
                         />
                         {err('phone')}
                     </div>
-                    <div>
-                        <label htmlFor="u-role" className={label}>
-                            Account type <Req />
-                        </label>
-                        <select
-                            id="u-role"
-                            className={input}
-                            value={data.role}
-                            onChange={(e) => setData('role', e.target.value)}
-                        >
-                            <option value="customer">Customer</option>
-                            <option value="admin">Admin (full access)</option>
-                        </select>
-                        {err('role')}
-                    </div>
                     <div className="md:col-span-2">
                         <label htmlFor="u-address" className={label}>
                             Address (optional)
@@ -202,7 +187,7 @@ export default function Customers({
                         <button
                             type="button"
                             onClick={suggest}
-                            className="mt-1 text-xs font-semibold tracking-widest text-[#C96F48] uppercase hover:underline"
+                            className="mt-1 text-sm font-semibold text-pw-rust hover:underline"
                         >
                             Generate a strong one
                         </button>
@@ -223,7 +208,7 @@ export default function Customers({
                             required
                         />
                     </div>
-                    <div className="border-t border-dashed border-[#0F1E2B]/25 pt-4 md:col-span-2">
+                    <div className="border-t border-dashed border-pw-ink/25 pt-4 md:col-span-2">
                         <label htmlFor="u-admin" className={label}>
                             Your admin password (to confirm) <Req />
                         </label>
@@ -243,7 +228,7 @@ export default function Customers({
                     <div className="md:col-span-2">
                         <button
                             disabled={processing}
-                            className="rounded-full bg-[#0F1E2B] px-8 py-3 text-sm font-semibold text-[#F7F1E8] transition hover:bg-[#F0A98B] hover:text-[#0F1E2B] disabled:opacity-50"
+                            className="rounded-full bg-pw-ink px-8 py-3 text-sm font-semibold text-pw-cream transition hover:bg-pw-peach hover:text-pw-ink disabled:opacity-50"
                         >
                             {processing ? 'Creating…' : 'Create account'}
                         </button>
@@ -257,34 +242,29 @@ export default function Customers({
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder="Search name, email or number"
-                    aria-label="Search people"
-                    className="w-full rounded-full border border-[#F7F1E8]/25 bg-transparent px-4 py-2 text-sm text-[#F7F1E8] outline-none placeholder:text-[#F7F1E8]/40 focus:border-[#F0A98B]"
+                    aria-label="Search customers"
+                    className="w-full rounded-full border border-pw-cream/25 bg-transparent px-4 py-2 text-sm text-pw-cream outline-none placeholder:text-pw-cream/65 focus:border-pw-peach"
                 />
-                <button className="rounded-full border border-[#F7F1E8]/25 px-5 text-sm transition hover:bg-[#F0A98B] hover:text-[#0B1F26]">
+                <button className="rounded-full border border-pw-cream/25 px-5 text-sm transition hover:bg-pw-peach hover:text-pw-navy">
                     Search
                 </button>
             </form>
 
             <div className="mt-6 grid gap-5 md:grid-cols-2">
-                {customers.map((c) => (
+                {customers.data.map((c: any) => (
                     <div
                         key={c.id}
-                        className="rounded-3xl bg-[#F7F1E8] p-6 text-[#0F1E2B] shadow-xl transition hover:-translate-y-1"
+                        className="rounded-3xl bg-pw-cream p-6 text-pw-ink shadow-xl transition hover:-translate-y-1"
                     >
                         <div className="flex items-center gap-4">
-                            <span className="text-[#0F1E2B]">
+                            <span className="text-pw-ink">
                                 <UserAvatar user={c} size={52} />
                             </span>
                             <div className="min-w-0">
                                 <h3 className="truncate font-serif text-2xl">
                                     {c.name}
-                                    {c.role === 'admin' && (
-                                        <span className="ml-2 rounded-full bg-[#0F1E2B] px-2 py-0.5 align-middle text-[10px] tracking-widest text-[#F7F1E8] uppercase">
-                                            Admin
-                                        </span>
-                                    )}
                                 </h3>
-                                <p className="truncate text-sm text-[#0F1E2B]/60">
+                                <p className="truncate text-sm text-pw-ink/70">
                                     {c.email}
                                 </p>
                             </div>
@@ -293,17 +273,47 @@ export default function Customers({
                             {c.phone || 'No contact'} ·{' '}
                             {c.address || 'No address'}
                         </p>
-                        <p className="mt-4 border-t border-dashed border-[#0F1E2B]/25 pt-3 text-[10px] tracking-[0.25em] text-[#C96F48] uppercase">
+                        <p className="mt-4 border-t border-dashed border-pw-ink/25 pt-3 text-xs tracking-[0.18em] text-pw-rust uppercase">
                             {c.orders_count} orders
                         </p>
                     </div>
                 ))}
-                {customers.length === 0 && (
-                    <p className="text-[#F7F1E8]/60">
+                {customers.data.length === 0 && (
+                    <p className="text-pw-cream/60">
                         No one matches that search.
                     </p>
                 )}
             </div>
+
+            {(customers.prev_page_url || customers.next_page_url) && (
+                <div className="mt-6 flex items-center justify-between text-sm text-pw-cream/70">
+                    {customers.prev_page_url ? (
+                        <Link
+                            href={customers.prev_page_url}
+                            preserveScroll
+                            className="rounded-full border border-pw-cream/30 px-4 py-1.5 hover:border-pw-peach"
+                        >
+                            ← Newer
+                        </Link>
+                    ) : (
+                        <span />
+                    )}
+                    <span>
+                        Page {customers.current_page} of {customers.last_page}
+                    </span>
+                    {customers.next_page_url ? (
+                        <Link
+                            href={customers.next_page_url}
+                            preserveScroll
+                            className="rounded-full border border-pw-cream/30 px-4 py-1.5 hover:border-pw-peach"
+                        >
+                            Older →
+                        </Link>
+                    ) : (
+                        <span />
+                    )}
+                </div>
+            )}
         </Shell>
     );
 }

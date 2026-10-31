@@ -56,6 +56,9 @@ export default function PageLoader() {
             const visit = event?.detail?.visit;
             // ignore form posts / background requests, only real page navigations
             if (visit && visit.method && visit.method !== 'get') return;
+            // ignore silent partial refreshes (the notification bell's timer, live search):
+            // they only ask for some of the data, so they must never cover the screen
+            if (visit && Array.isArray(visit.only) && visit.only.length > 0) return;
             window.clearTimeout(showTimer.current);
             showTimer.current = window.setTimeout(show, SHOW_AFTER_MS);
         });
@@ -99,7 +102,7 @@ export default function PageLoader() {
             role="status"
             aria-live="polite"
             aria-label="Loading"
-            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center ${isFirst ? 'bg-[#0F1E2B]' : 'bg-[#0B1F26]/85 backdrop-blur-sm'}`}
+            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center ${isFirst ? 'bg-pw-ink' : 'bg-pw-navy/85 backdrop-blur-sm'}`}
             style={{
                 opacity: on ? 1 : 0,
                 transition: `opacity ${FADE_MS}ms ease`,
@@ -122,7 +125,7 @@ export default function PageLoader() {
             {isFirst && (
                 <>
                     <div
-                        className="pointer-events-none absolute top-1/2 left-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5C8CA8]/15 blur-3xl"
+                        className="pointer-events-none absolute top-1/2 left-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pw-steel/15 blur-3xl"
                         aria-hidden="true"
                     />
                     <div
@@ -191,13 +194,13 @@ export default function PageLoader() {
                 </svg>
 
                 <p
-                    className="pl-in mt-6 font-serif text-4xl text-[#F7F1E8]"
+                    className="pl-in mt-6 font-serif text-4xl text-pw-cream"
                     style={{ animationDelay: '.15s' }}
                 >
-                    PhineWash<span className="text-[#F0A98B] italic">.</span>
+                    PhineWash<span className="text-pw-peach italic">.</span>
                 </p>
                 <p
-                    className="pl-in pl-pulse mt-3 text-[11px] tracking-[0.35em] text-[#A9D3E6] uppercase"
+                    className="pl-in pl-pulse mt-3 text-xs tracking-[0.35em] text-pw-sky uppercase"
                     style={{ animationDelay: '.3s' }}
                 >
                     Naglalaba pa…

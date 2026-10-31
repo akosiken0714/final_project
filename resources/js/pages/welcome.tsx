@@ -1,4 +1,4 @@
-﻿import { Link, usePage } from '@inertiajs/react';
+﻿import { Head, Link, usePage } from '@inertiajs/react';
 import {
     CSSProperties,
     PointerEvent as ReactPointerEvent,
@@ -13,7 +13,11 @@ import Reveal from '@/components/Reveal';
 import BlurText from '@/components/fx/BlurText';
 import CountUp from '@/components/fx/CountUp';
 import SpotlightCard from '@/components/fx/SpotlightCard';
+import LandingFaq from '@/components/LandingFaq';
+import LandingOrderWays from '@/components/LandingOrderWays';
+import LandingReviews from '@/components/LandingReviews';
 import Shell from '@/components/Shell';
+import ShopStatus from '@/components/ShopStatus';
 
 const statuses = ['Pending', 'In Progress', 'Ready for Pickup', 'Completed'];
 
@@ -75,10 +79,144 @@ const SHOP = {
     name: 'PhineWash Laundry Services',
     address: 'Poblacion, Anahawan, Southern Leyte (in front of the convent)',
     hours: 'Mon–Sat 8:00 AM – 7:00 PM · Sun 9:00 AM – 5:00 PM',
-    phone: '0900 000 0000',
+    // FILL IN: type the shop's real phone number between the quotes, e.g. '0917 123 4567'.
+    // While it is empty, the phone line is hidden everywhere, so no fake number is ever shown.
+    phone: '',
+    facebookName: 'Phinewash Laundry service',
+    facebook:
+        'https://www.facebook.com/search/top?q=Phinewash%20Laundry%20service', // FILL IN: paste your real Facebook page link (the search link works until then)
+    googleName: 'Phinewash Laundry service',
+    google: 'https://www.google.com/search?q=Phinewash+Laundry+service', // FILL IN: paste your real Google Business link (the search link works until then)
     mapQuery: 'PhineWash Laundry Services, Poblacion, Anahawan, Southern Leyte',
     pickupNote: 'Pickup & delivery from ₱20 depending on distance.',
+    // Facebook Page username for the "Message us" button, e.g. 'phinewash' gives https://m.me/phinewash.
+    // Leave empty and the button stays hidden.
+    messenger: '',
+    payments: 'Pay by cash or GCash.',
 };
+
+function SiteFooter() {
+    const label =
+        'text-xs tracking-[0.25em] text-pw-sky/70 uppercase';
+    const pill =
+        'group flex items-center gap-3 rounded-full border border-pw-cream/15 px-4 py-2.5 text-sm text-pw-cream transition hover:-translate-y-0.5 hover:border-pw-peach hover:text-pw-peach';
+
+    return (
+        <footer className="border-t border-pw-cream/10 px-6 pt-14 pb-8 text-pw-cream">
+            <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[1.3fr_1fr_1fr]">
+                {/* Brand */}
+                <div>
+                    <p className="font-serif text-4xl">
+                        Phine<span className="text-pw-peach italic">Wash</span>
+                    </p>
+                    <p className="mt-2 text-sm text-pw-cream/60">
+                        Wash. Dry. Fold.
+                    </p>
+                    <p className="mt-4 max-w-xs text-sm text-pw-cream/50">
+                        {SHOP.pickupNote}
+                    </p>
+                </div>
+
+                {/* Contact */}
+                <div>
+                    <p className={label}>Contact</p>
+                    <ul className="mt-4 space-y-3 text-sm">
+                        {SHOP.phone && (
+                            <li>
+                                <a
+                                    href={`tel:${SHOP.phone.replace(/\s/g, '')}`}
+                                    className="transition hover:text-pw-peach"
+                                >
+                                    {SHOP.phone}
+                                </a>
+                            </li>
+                        )}
+                        <li className="text-pw-cream/70">{SHOP.address}</li>
+                        <li className="text-pw-cream/70">{SHOP.hours}</li>
+                    </ul>
+                </div>
+
+                {/* Find us online */}
+                <div>
+                    <p className={label}>Find us online</p>
+                    <div className="mt-4 flex flex-col items-start gap-3">
+                        {SHOP.facebook && (
+                        <a
+                            href={SHOP.facebook}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={pill}
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                className="h-5 w-5 fill-current"
+                                aria-hidden="true"
+                            >
+                                <path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.5V21h3z" />
+                            </svg>
+                            <span>
+                                <span className="sr-only">Facebook: </span>
+                                {SHOP.facebookName}
+                            </span>
+                        </a>
+                        )}
+                        {SHOP.google && (
+                        <a
+                            href={SHOP.google}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={pill}
+                        >
+                            <span
+                                className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] leading-none font-bold"
+                                aria-hidden="true"
+                            >
+                                G
+                            </span>
+                            <span>
+                                <span className="sr-only">Google: </span>
+                                {SHOP.googleName}
+                            </span>
+                        </a>
+                        )}
+                        {SHOP.messenger && (
+                            <a
+                                href={`https://m.me/${SHOP.messenger}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={pill}
+                            >
+                                <span
+                                    className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] leading-none font-bold"
+                                    aria-hidden="true"
+                                >
+                                    M
+                                </span>
+                                <span>Message us on Messenger</span>
+                            </a>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="mx-auto mt-12 flex max-w-5xl flex-col items-center justify-between gap-2 border-t border-pw-cream/10 pt-6 text-xs text-pw-cream/40 sm:flex-row">
+                <p>© 2026 {SHOP.name}</p>
+                <nav aria-label="Legal" className="flex gap-4">
+                    <Link href="/privacy" className="hover:text-pw-peach">
+                        Privacy
+                    </Link>
+                    <Link href="/terms" className="hover:text-pw-peach">
+                        Terms
+                    </Link>
+                    <Link href="/refund" className="hover:text-pw-peach">
+                        Refunds
+                    </Link>
+                </nav>
+                <p>Poblacion, Anahawan, Southern Leyte</p>
+            </div>
+        </footer>
+    );
+}
 
 const reducedMotion = () =>
     typeof window !== 'undefined' &&
@@ -177,27 +315,27 @@ function Tag({
 }) {
     return (
         <div className="flex flex-col items-center">
-            <div className="h-24 w-px bg-[#F7F1E8]/40" />
-            <div className="w-64 rounded-3xl bg-[#F7F1E8] px-7 pt-6 pb-8 text-[#0F1E2B] shadow-2xl">
-                <div className="mx-auto -mt-1 mb-5 h-4 w-4 rounded-full border-2 border-[#0F1E2B]/40" />
-                <p className="text-[10px] tracking-[0.3em] text-[#0F1E2B]/50 uppercase">
+            <div className="h-24 w-px bg-pw-cream/40" />
+            <div className="w-64 rounded-3xl bg-pw-cream px-7 pt-6 pb-8 text-pw-ink shadow-2xl">
+                <div className="mx-auto -mt-1 mb-5 h-4 w-4 rounded-full border-2 border-pw-ink/40" />
+                <p className="text-[10px] tracking-[0.3em] text-pw-ink/70 uppercase">
                     Order tag
                 </p>
                 <p className="mt-1 font-serif text-3xl">#0042</p>
-                <p className="mt-4 text-sm text-[#0F1E2B]/70">{name}</p>
+                <p className="mt-4 text-sm text-pw-ink/70">{name}</p>
                 <div className="mt-5 flex gap-1.5">
                     {statuses.map((s, i) => (
                         <div
                             key={s}
-                            className={`h-1 flex-1 rounded-full transition-all duration-700 ${i <= step ? 'bg-[#F0A98B]' : 'bg-[#0F1E2B]/15'}`}
+                            className={`h-1 flex-1 rounded-full transition-all duration-700 ${i <= step ? 'bg-pw-peach' : 'bg-pw-ink/15'}`}
                         />
                     ))}
                 </div>
                 <p key={step} className="rise mt-3 text-sm font-semibold">
                     {statuses[step]}
                 </p>
-                <div className="mt-5 flex items-end justify-between border-t border-dashed border-[#0F1E2B]/25 pt-4">
-                    <span className="text-[10px] tracking-widest text-[#0F1E2B]/50 uppercase">
+                <div className="mt-5 flex items-end justify-between border-t border-dashed border-pw-ink/25 pt-4">
+                    <span className="text-[10px] tracking-widest text-pw-ink/70 uppercase">
                         Total
                     </span>
                     <span className="font-serif text-2xl">₱{total}</span>
@@ -507,18 +645,21 @@ const SPECKS = Array.from({ length: 16 }, (_, i) => ({
     c: i % 3 === 0 ? '#A9D3E6' : '#F7F1E8',
 }));
 
+// The moving glow follows the scroll position. It is updated straight on the element (see the scroll effect in
+// Welcome), NOT through React state, so scrolling never re-renders the whole page.
 const SewBackdrop = memo(function SewBackdrop({
-    progress = 0,
+    glowRef,
 }: {
-    progress?: number;
+    glowRef: RefObject<HTMLDivElement | null>;
 }) {
     return (
         <div
             className="pointer-events-none absolute inset-0 z-0"
             aria-hidden="true"
         >
+            {/* Phones skip the two full-page masked layers below: they are huge to paint and barely visible on a small screen. */}
             <div
-                className="absolute inset-0"
+                className="absolute inset-0 max-md:hidden"
                 style={{
                     background:
                         'radial-gradient(1400px 1000px at 50% 50%, transparent, rgba(6,17,22,0.28) 100%)',
@@ -529,9 +670,11 @@ const SewBackdrop = memo(function SewBackdrop({
                 }}
             />
             <div
-                className="absolute inset-0"
+                ref={glowRef}
+                className="absolute inset-0 max-md:hidden"
                 style={{
-                    background: `radial-gradient(700px 500px at ${20 + (progress % 60)}% ${10 + ((progress * 0.6) % 70)}%, rgba(169,211,230,0.06), transparent 60%)`,
+                    background:
+                        'radial-gradient(700px 500px at 20% 10%, rgba(169,211,230,0.06), transparent 60%)',
                     WebkitMaskImage:
                         'linear-gradient(to bottom, transparent 0, #000 480px)',
                     maskImage:
@@ -539,12 +682,12 @@ const SewBackdrop = memo(function SewBackdrop({
                 }}
             />
             <div className="sew-glow absolute inset-0" />
-            <div className="sew-grain absolute inset-0" />
+            <div className="sew-grain absolute inset-0 max-md:hidden" />
             <div className="fixed inset-0 overflow-hidden">
                 {SPECKS.map((s, i) => (
                     <span
                         key={i}
-                        className="sew-speck"
+                        className={`sew-speck ${i >= 6 ? 'max-md:hidden' : ''}`}
                         style={
                             {
                                 left: `${s.left}%`,
@@ -570,7 +713,7 @@ const HERO_GRAIN =
 const PageTexture = memo(function PageTexture() {
     return (
         <div
-            className="pointer-events-none absolute inset-0 z-0"
+            className="pointer-events-none absolute inset-0 z-0 max-md:hidden"
             aria-hidden="true"
         >
             <div
@@ -591,7 +734,19 @@ const PageTexture = memo(function PageTexture() {
     );
 });
 
-export default function Welcome({ services }: { services: any[] }) {
+export default function Welcome({
+    services,
+    reviews = [],
+    reviewSummary = { average: null, count: 0, breakdown: [0, 0, 0, 0, 0] },
+}: {
+    services: any[];
+    reviews?: any[];
+    reviewSummary?: {
+        average: number | null;
+        count: number;
+        breakdown?: number[];
+    };
+}) {
     const { auth }: any = usePage().props;
     const start = auth?.user ? '/dashboard' : '/register';
 
@@ -601,17 +756,36 @@ export default function Welcome({ services }: { services: any[] }) {
     const shown = services.length > 0 ? services : LANDING_SERVICES;
 
     const [activeStep, setActiveStep] = useState(0);
-    const [progress, setProgress] = useState(0);
     const sew = useRef<HTMLDivElement>(null);
+    const bar = useRef<HTMLDivElement>(null);
+    const glow = useRef<HTMLDivElement>(null);
 
+    // Scroll progress drives the thin top bar and the slow-moving glow. It is written straight onto those two
+    // elements (once per frame) instead of into React state: state would re-render this whole page on every scroll event.
     useEffect(() => {
-        const onScroll = () => {
+        let raf = 0;
+        const update = () => {
+            raf = 0;
             const h =
                 document.documentElement.scrollHeight - window.innerHeight;
-            setProgress(h > 0 ? (window.scrollY / h) * 100 : 0);
+            const p = h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0;
+            if (bar.current) {
+                bar.current.style.transform = `scaleX(${p / 100})`;
+            }
+            // The glow layer is hidden on phones, so only move it on bigger screens.
+            if (glow.current && window.innerWidth >= 768) {
+                glow.current.style.background = `radial-gradient(700px 500px at ${20 + (p % 60)}% ${10 + ((p * 0.6) % 70)}%, rgba(169,211,230,0.06), transparent 60%)`;
+            }
         };
+        const onScroll = () => {
+            if (!raf) raf = requestAnimationFrame(update);
+        };
+        update();
         window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
+        return () => {
+            if (raf) cancelAnimationFrame(raf);
+            window.removeEventListener('scroll', onScroll);
+        };
     }, []);
 
     useEffect(() => {
@@ -633,6 +807,22 @@ export default function Welcome({ services }: { services: any[] }) {
 
     return (
         <Shell bare>
+            <Head title="Wash, Dry & Fold in Anahawan">
+                <meta
+                    name="description"
+                    content="Laundry with pickup and delivery in Poblacion, Anahawan, Southern Leyte. Order online, pay by cash or GCash, and track your laundry."
+                />
+                <meta property="og:type" content="website" />
+                <meta property="og:site_name" content="PhineWash Laundry Services" />
+                <meta property="og:title" content="PhineWash Laundry Services" />
+                <meta
+                    property="og:description"
+                    content="Wash, dry & fold with pickup and delivery in Anahawan. Order online and track your laundry."
+                />
+                {/* TODO when live: change to the full address, e.g. https://yourdomain.com/images/hero.jpg */}
+                <meta property="og:image" content="/images/hero.jpg" />
+                <meta name="twitter:card" content="summary_large_image" />
+            </Head>
             <div className="relative">
                 <style>{`
                     @keyframes wow-up { from { transform: translateY(110%); } to { transform: translateY(0); } }
@@ -645,25 +835,26 @@ export default function Welcome({ services }: { services: any[] }) {
                 <PageTexture />
 
                 <div
-                    className="fixed top-0 left-0 z-50 h-0.5 bg-[#F0A98B]"
-                    style={{ width: `${progress}%` }}
+                    ref={bar}
+                    className="fixed top-0 left-0 z-50 h-0.5 w-full origin-left bg-pw-peach"
+                    style={{ transform: 'scaleX(0)' }}
                 />
 
                 {/* HERO — scaled up so it fills the first screen like the reference, no gap below */}
                 <section className="relative overflow-hidden px-6 pt-16 pb-20 md:pt-24 md:pb-28">
                     <div
-                        className="pointer-events-none absolute top-0 -left-32 h-96 w-96 rounded-full bg-[#5C8CA8]/20 blur-3xl"
+                        className="pointer-events-none absolute top-0 -left-32 h-96 w-96 rounded-full bg-pw-steel/20 blur-3xl max-md:hidden"
                         aria-hidden="true"
                     />
 
                     <div className="relative z-10 mx-auto w-full max-w-6xl">
-                        <p className="text-sm tracking-[0.3em] text-[#A9D3E6] uppercase md:text-base">
-                            PhineWash <span className="text-[#F0A98B]">·</span>{' '}
+                        <p className="text-sm tracking-[0.3em] text-pw-sky uppercase md:text-base">
+                            PhineWash <span className="text-pw-peach">·</span>{' '}
                             Laundry Services
                         </p>
 
                         <h1
-                            className="mt-6 font-serif leading-[1.05] text-[#F7F1E8]"
+                            className="mt-6 font-serif leading-[1.05] text-pw-cream"
                             style={{
                                 fontSize: 'clamp(3rem, min(7vw, 10vh), 6rem)',
                             }}
@@ -672,7 +863,7 @@ export default function Welcome({ services }: { services: any[] }) {
                                 <span className="block">Fresh, folded,</span>
                             </span>
                             <span className="-mb-[0.12em] block overflow-hidden pb-[0.12em]">
-                                <span className="block text-[#F0A98B] italic">
+                                <span className="block text-pw-peach italic">
                                     finished.
                                 </span>
                             </span>
@@ -694,15 +885,15 @@ export default function Welcome({ services }: { services: any[] }) {
                         </svg>
 
                         <BlurText
-                            className="mt-6 max-w-md text-base text-[#F7F1E8]/65 md:text-lg"
+                            className="mt-6 max-w-md text-base text-pw-cream/65 md:text-lg"
                             delay={1.2}
-                            text="Kaya kong tanggalin ang mantsa, pero hindi ang alaala niya sa'yo."
+                            text="Order online, we pick up, wash, and fold. Track every step until it’s at your door."
                         />
 
                         <Magnetic>
                             <Link
                                 href={start}
-                                className="group mt-8 inline-flex items-center gap-3 border-b border-[#F7F1E8]/40 pb-1 text-lg text-[#F7F1E8] transition hover:border-[#F0A98B] hover:text-[#F0A98B] md:text-xl"
+                                className="group mt-8 inline-flex items-center gap-3 border-b border-pw-cream/40 pb-1 text-lg text-pw-cream transition hover:border-pw-peach hover:text-pw-peach md:text-xl"
                             >
                                 {auth?.user
                                     ? 'Go to dashboard'
@@ -713,16 +904,16 @@ export default function Welcome({ services }: { services: any[] }) {
                             </Link>
                         </Magnetic>
 
-                        <ul className="mt-12 grid gap-6 border-t border-[#F7F1E8]/20 pt-6 md:grid-cols-3 md:gap-8">
+                        <ul className="mt-12 grid gap-6 border-t border-pw-cream/20 pt-6 md:grid-cols-3 md:gap-8">
                             <li>
                                 <SpotlightCard className="-m-3 rounded-xl p-3">
-                                    <p className="font-serif text-xl text-[#F7F1E8] md:text-2xl">
+                                    <p className="font-serif text-xl text-pw-cream md:text-2xl">
                                         Fixed{' '}
-                                        <span className="text-[#F0A98B] italic">
+                                        <span className="text-pw-peach italic">
                                             per-load
                                         </span>
                                     </p>
-                                    <p className="mt-2 text-sm text-[#F7F1E8]/65 md:text-base">
+                                    <p className="mt-2 text-sm text-pw-cream/65 md:text-base">
                                         ₱<CountUp to={180} /> for up to 8kg of
                                         regular clothes.
                                     </p>
@@ -730,13 +921,13 @@ export default function Welcome({ services }: { services: any[] }) {
                             </li>
                             <li>
                                 <SpotlightCard className="-m-3 rounded-xl p-3">
-                                    <p className="font-serif text-xl text-[#F7F1E8] md:text-2xl">
+                                    <p className="font-serif text-xl text-pw-cream md:text-2xl">
                                         Track every{' '}
-                                        <span className="text-[#F0A98B] italic">
+                                        <span className="text-pw-peach italic">
                                             step
                                         </span>
                                     </p>
-                                    <p className="mt-2 text-sm text-[#F7F1E8]/65 md:text-base">
+                                    <p className="mt-2 text-sm text-pw-cream/65 md:text-base">
                                         From pending to ready, right on your
                                         phone.
                                     </p>
@@ -744,13 +935,13 @@ export default function Welcome({ services }: { services: any[] }) {
                             </li>
                             <li>
                                 <SpotlightCard className="-m-3 rounded-xl p-3">
-                                    <p className="font-serif text-xl text-[#F7F1E8] md:text-2xl">
+                                    <p className="font-serif text-xl text-pw-cream md:text-2xl">
                                         Pickup &{' '}
-                                        <span className="text-[#F0A98B] italic">
+                                        <span className="text-pw-peach italic">
                                             delivery
                                         </span>
                                     </p>
-                                    <p className="mt-2 text-sm text-[#F7F1E8]/65 md:text-base">
+                                    <p className="mt-2 text-sm text-pw-cream/65 md:text-base">
                                         From ₱<CountUp to={20} /> depending on
                                         distance.
                                     </p>
@@ -761,7 +952,7 @@ export default function Welcome({ services }: { services: any[] }) {
                 </section>
 
                 <div ref={sew} className="relative isolate overflow-x-clip">
-                    <SewBackdrop progress={progress} />
+                    <SewBackdrop glowRef={glow} />
                     <SewThread wrap={sew} />
 
                     <section
@@ -769,7 +960,7 @@ export default function Welcome({ services }: { services: any[] }) {
                         className="relative scroll-mt-24 px-6 py-12"
                     >
                         <div
-                            className="pointer-events-none absolute top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-3xl"
+                            className="pointer-events-none absolute top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-3xl max-md:hidden"
                             style={{
                                 background:
                                     'radial-gradient(closest-side, rgba(169,211,230,0.08), transparent)',
@@ -779,18 +970,18 @@ export default function Welcome({ services }: { services: any[] }) {
                         <div className="relative mx-auto grid max-w-6xl gap-10 md:grid-cols-2">
                             <div className="md:sticky md:top-20 md:self-start">
                                 <Reveal>
-                                    <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+                                    <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                                         How it works
                                     </p>
-                                    <h2 className="mt-4 font-serif text-5xl text-[#F7F1E8] md:text-6xl">
+                                    <h2 className="mt-4 font-serif text-5xl text-pw-cream md:text-6xl">
                                         Follow your{' '}
-                                        <span className="text-[#F0A98B] italic">
+                                        <span className="text-pw-peach italic">
                                             tag.
                                         </span>
                                     </h2>
                                 </Reveal>
                                 <div className="relative mt-6 flex justify-center md:justify-start md:pl-10">
-                                    <div className="pointer-events-none absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F0A98B]/10 blur-3xl md:left-[calc(2.5rem+8rem)]" />
+                                    <div className="pointer-events-none absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pw-peach/10 blur-3xl max-md:hidden md:left-[calc(2.5rem+8rem)]" />
                                     <div className="swing">
                                         <Tag
                                             step={activeStep}
@@ -810,15 +1001,15 @@ export default function Welcome({ services }: { services: any[] }) {
                                     >
                                         <Reveal>
                                             <div
-                                                className={`border-t pt-6 transition-colors duration-500 ${i === activeStep ? 'border-[#F0A98B]' : 'border-[#F7F1E8]/20'}`}
+                                                className={`border-t pt-6 transition-colors duration-500 ${i === activeStep ? 'border-pw-peach' : 'border-pw-cream/20'}`}
                                             >
-                                                <p className="text-xs tracking-widest text-[#A9D3E6]">
+                                                <p className="text-xs tracking-widest text-pw-sky">
                                                     {n}
                                                 </p>
-                                                <h3 className="mt-3 font-serif text-4xl text-[#F7F1E8]">
+                                                <h3 className="mt-3 font-serif text-4xl text-pw-cream">
                                                     {title}
                                                 </h3>
-                                                <p className="mt-3 max-w-sm text-[#F7F1E8]/60">
+                                                <p className="mt-3 max-w-sm text-pw-cream/60">
                                                     {text}
                                                 </p>
                                             </div>
@@ -834,7 +1025,7 @@ export default function Welcome({ services }: { services: any[] }) {
                         className="relative scroll-mt-24 px-6 py-24"
                     >
                         <div
-                            className="pointer-events-none absolute top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-3xl"
+                            className="pointer-events-none absolute top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-3xl max-md:hidden"
                             style={{
                                 background:
                                     'radial-gradient(closest-side, rgba(240,169,139,0.08), transparent)',
@@ -843,24 +1034,24 @@ export default function Welcome({ services }: { services: any[] }) {
                         />
                         <div className="relative mx-auto max-w-6xl">
                             <Reveal className="text-center">
-                                <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+                                <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                                     Price list
                                 </p>
-                                <h2 className="mt-4 font-serif text-5xl text-[#F7F1E8] md:text-6xl">
+                                <h2 className="mt-4 font-serif text-5xl text-pw-cream md:text-6xl">
                                     Simple,{' '}
-                                    <span className="text-[#F0A98B] italic">
+                                    <span className="text-pw-peach italic">
                                         honest
                                     </span>{' '}
                                     prices.
                                 </h2>
-                                <p className="mt-3 text-[#F7F1E8]/60">
+                                <p className="mt-3 text-pw-cream/60">
                                     Fixed per load or per piece — you always see
                                     your total before you place an order.
                                 </p>
                             </Reveal>
 
                             <div className="relative mt-20">
-                                <div className="absolute top-0 right-0 left-0 h-0.5 bg-[#F7F1E8]/40" />
+                                <div className="absolute top-0 right-0 left-0 h-0.5 bg-pw-cream/40" />
                                 <div className="grid grid-cols-2 gap-x-6 gap-y-16 md:grid-cols-4">
                                     {shown.map((s, i) => (
                                         <Drop key={s.id} delay={i * 180}>
@@ -871,13 +1062,13 @@ export default function Welcome({ services }: { services: any[] }) {
                                                     animationDelay: `${i * 0.4}s`,
                                                 }}
                                             >
-                                                <div className="z-10 -mb-3 h-8 w-3 rounded-sm bg-[#F0A98B]" />
+                                                <div className="z-10 -mb-3 h-8 w-3 rounded-sm bg-pw-peach" />
                                                 <Tilt>
                                                     <div
-                                                        className={`w-full max-w-[220px] rounded-2xl px-5 pt-8 pb-6 text-center text-[#0F1E2B] shadow-xl transition duration-300 hover:scale-105 ${i === 0 ? 'bg-[#F0A98B]' : 'bg-[#F7F1E8]'}`}
+                                                        className={`w-full max-w-[220px] rounded-2xl px-5 pt-8 pb-6 text-center text-pw-ink shadow-xl transition duration-300 hover:scale-105 ${i === 0 ? 'bg-pw-peach' : 'bg-pw-cream'}`}
                                                     >
-                                                        <div className="mx-auto mb-4 h-3 w-3 rounded-full border-2 border-[#0F1E2B]/40" />
-                                                        <p className="text-[10px] tracking-[0.25em] text-[#0F1E2B]/60 uppercase">
+                                                        <div className="mx-auto mb-4 h-3 w-3 rounded-full border-2 border-pw-ink/40" />
+                                                        <p className="text-[10px] tracking-[0.25em] text-pw-ink/70 uppercase">
                                                             {i === 0
                                                                 ? 'Most popular'
                                                                 : 'Service'}
@@ -893,17 +1084,17 @@ export default function Welcome({ services }: { services: any[] }) {
                                                                 )}
                                                             />
                                                         </p>
-                                                        <p className="text-xs text-[#0F1E2B]/60">
+                                                        <p className="text-xs text-pw-ink/70">
                                                             per {s.unit}
                                                         </p>
                                                         {s.note && (
-                                                            <p className="mt-2 text-[11px] text-[#0F1E2B]/50">
+                                                            <p className="mt-2 text-[11px] text-pw-ink/70">
                                                                 {s.note}
                                                             </p>
                                                         )}
                                                         <Link
                                                             href={start}
-                                                            className="mt-5 block border-t border-dashed border-[#0F1E2B]/30 pt-3 text-xs font-semibold tracking-widest uppercase hover:underline"
+                                                            className="mt-5 block border-t border-dashed border-pw-ink/30 pt-3 text-xs font-semibold tracking-widest uppercase hover:underline"
                                                         >
                                                             Order →
                                                         </Link>
@@ -916,13 +1107,19 @@ export default function Welcome({ services }: { services: any[] }) {
                             </div>
 
                             <Reveal>
-                                <p className="mt-14 text-center text-sm text-[#F7F1E8]/60">
+                                <p className="mt-14 text-center text-sm text-pw-cream/60">
                                     Comforters are washed separately because of
-                                    their weight. {SHOP.pickupNote}
+                                    their weight. {SHOP.pickupNote} {SHOP.payments}
                                 </p>
                             </Reveal>
                         </div>
                     </section>
+
+                    <LandingOrderWays loggedIn={!!auth?.user} />
+
+                    <LandingReviews reviews={reviews} summary={reviewSummary} />
+
+                    <LandingFaq />
 
                     <section
                         id="find-us"
@@ -930,43 +1127,49 @@ export default function Welcome({ services }: { services: any[] }) {
                     >
                         <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-12 md:grid-cols-2">
                             <Reveal>
-                                <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+                                <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                                     Find us
                                 </p>
-                                <h2 className="mt-3 font-serif text-5xl text-[#F7F1E8] md:text-6xl">
+                                <h2 className="mt-3 font-serif text-5xl text-pw-cream md:text-6xl">
                                     Drop by{' '}
-                                    <span className="text-[#F0A98B] italic">
+                                    <span className="text-pw-peach italic">
                                         the shop
                                     </span>
                                 </h2>
-                                <dl className="mt-8 space-y-5 text-[#F7F1E8]">
+                                <dl className="mt-8 space-y-5 text-pw-cream">
                                     <div>
-                                        <dt className="text-xs tracking-[0.25em] text-[#A9D3E6]/70 uppercase">
+                                        <dt className="text-xs tracking-[0.25em] text-pw-sky/70 uppercase">
                                             Address
                                         </dt>
                                         <dd className="mt-1">{SHOP.address}</dd>
                                     </div>
                                     <div>
-                                        <dt className="text-xs tracking-[0.25em] text-[#A9D3E6]/70 uppercase">
+                                        <dt className="text-xs tracking-[0.25em] text-pw-sky/70 uppercase">
                                             Hours
                                         </dt>
-                                        <dd className="mt-1">{SHOP.hours}</dd>
-                                    </div>
-                                    <div>
-                                        <dt className="text-xs tracking-[0.25em] text-[#A9D3E6]/70 uppercase">
-                                            Phone
-                                        </dt>
                                         <dd className="mt-1">
-                                            <a
-                                                href={`tel:${SHOP.phone.replace(/\s/g, '')}`}
-                                                className="hover:text-[#F0A98B]"
-                                            >
-                                                {SHOP.phone}
-                                            </a>
+                                            {SHOP.hours}
+                                            <br />
+                                            <ShopStatus />
                                         </dd>
                                     </div>
+                                    {SHOP.phone && (
+                                        <div>
+                                            <dt className="text-xs tracking-[0.25em] text-pw-sky/70 uppercase">
+                                                Phone
+                                            </dt>
+                                            <dd className="mt-1">
+                                                <a
+                                                    href={`tel:${SHOP.phone.replace(/\s/g, '')}`}
+                                                    className="hover:text-pw-peach"
+                                                >
+                                                    {SHOP.phone}
+                                                </a>
+                                            </dd>
+                                        </div>
+                                    )}
                                     <div>
-                                        <dt className="text-xs tracking-[0.25em] text-[#A9D3E6]/70 uppercase">
+                                        <dt className="text-xs tracking-[0.25em] text-pw-sky/70 uppercase">
                                             Pickup & delivery
                                         </dt>
                                         <dd className="mt-1">
@@ -979,7 +1182,7 @@ export default function Welcome({ services }: { services: any[] }) {
                                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SHOP.mapQuery)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="mt-8 inline-block rounded-full bg-[#F7F1E8] px-8 py-4 font-semibold text-[#0F1E2B] shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-[#F0A98B]"
+                                        className="mt-8 inline-block rounded-full bg-pw-cream px-8 py-4 font-semibold text-pw-ink shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-pw-peach"
                                     >
                                         Get directions
                                     </a>
@@ -988,19 +1191,18 @@ export default function Welcome({ services }: { services: any[] }) {
 
                             <Reveal>
                                 <div className="relative z-10 flex flex-col items-center">
-                                    <div className="z-10 -mb-3 h-8 w-3 rounded-sm bg-[#F0A98B]" />
-                                    <div className="w-full max-w-sm rounded-3xl bg-[#F7F1E8] p-6 pt-8 text-[#0F1E2B] shadow-2xl shadow-black/40">
-                                        <div className="mx-auto mb-4 h-3 w-3 rounded-full border-2 border-[#0F1E2B]/40" />
-                                        <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-[#0F1E2B]/15 bg-[#EFE7D8]">
+                                    <div className="z-10 -mb-3 h-8 w-3 rounded-sm bg-pw-peach" />
+                                    <div className="w-full max-w-sm rounded-3xl bg-pw-cream p-6 pt-8 text-pw-ink shadow-2xl shadow-black/40">
+                                        <div className="mx-auto mb-4 h-3 w-3 rounded-full border-2 border-pw-ink/40" />
+                                        <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-pw-ink/15 bg-pw-linen">
                                             <iframe
                                                 title={`${SHOP.name} location`}
                                                 src={`https://maps.google.com/maps?q=${encodeURIComponent(SHOP.mapQuery)}&z=16&output=embed`}
-                                                className="absolute left-0 w-full"
+                                                className="absolute left-0 w-full md:[filter:saturate(0.72)_brightness(0.96)_contrast(0.98)]"
                                                 style={{
                                                     top: '-52px',
                                                     height: 'calc(100% + 52px)',
                                                     border: 0,
-                                                    filter: 'saturate(0.72) brightness(0.96) contrast(0.98)',
                                                 }}
                                                 loading="lazy"
                                                 allowFullScreen
@@ -1015,7 +1217,7 @@ export default function Welcome({ services }: { services: any[] }) {
                                                 aria-hidden="true"
                                             />
                                             <div
-                                                className="pointer-events-none absolute inset-0 mix-blend-multiply"
+                                                className="pointer-events-none absolute inset-0 mix-blend-multiply max-md:hidden"
                                                 style={{
                                                     background:
                                                         'linear-gradient(180deg, rgba(247,241,232,0.18), rgba(240,169,139,0.08))',
@@ -1023,14 +1225,14 @@ export default function Welcome({ services }: { services: any[] }) {
                                                 aria-hidden="true"
                                             />
                                             <div
-                                                className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-[#0F1E2B]/10 ring-inset"
+                                                className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-pw-ink/10 ring-inset"
                                                 aria-hidden="true"
                                             />
                                         </div>
-                                        <p className="mt-4 text-xs tracking-[0.3em] text-[#0F1E2B]/60 uppercase">
+                                        <p className="mt-4 text-xs tracking-[0.3em] text-pw-ink/70 uppercase">
                                             {SHOP.name}
                                         </p>
-                                        <p className="mt-1 text-sm text-[#0F1E2B]/70">
+                                        <p className="mt-1 text-sm text-pw-ink/70">
                                             Visit us in Poblacion, Anahawan.
                                         </p>
                                     </div>
@@ -1044,7 +1246,7 @@ export default function Welcome({ services }: { services: any[] }) {
                         className="relative scroll-mt-24 px-6 py-28 text-center"
                     >
                         <div
-                            className="pointer-events-none absolute top-1/2 left-1/2 h-96 w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+                            className="pointer-events-none absolute top-1/2 left-1/2 h-96 w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl max-md:hidden"
                             style={{
                                 background:
                                     'radial-gradient(closest-side, rgba(240,169,139,0.10), transparent)',
@@ -1052,20 +1254,20 @@ export default function Welcome({ services }: { services: any[] }) {
                             aria-hidden="true"
                         />
                         <Reveal>
-                            <h2 className="relative mx-auto max-w-2xl font-serif text-5xl leading-tight text-[#F7F1E8] md:text-7xl">
+                            <h2 className="relative mx-auto max-w-2xl font-serif text-5xl leading-tight text-pw-cream md:text-7xl">
                                 Clean clothes,{' '}
-                                <span className="text-[#F0A98B] italic">
+                                <span className="text-pw-peach italic">
                                     zero fuss.
                                 </span>
                             </h2>
-                            <p className="relative mx-auto mt-4 max-w-sm text-[#F7F1E8]/60">
+                            <p className="relative mx-auto mt-4 max-w-sm text-pw-cream/60">
                                 Book online in a minute and follow your laundry
                                 all the way to pickup.
                             </p>
                             <Magnetic className="relative">
                                 <Link
                                     href={start}
-                                    className="mt-10 inline-block rounded-full bg-[#F7F1E8] px-8 py-4 font-semibold text-[#0F1E2B] transition hover:-translate-y-0.5 hover:bg-[#F0A98B]"
+                                    className="mt-10 inline-block rounded-full bg-pw-cream px-8 py-4 font-semibold text-pw-ink transition hover:-translate-y-0.5 hover:bg-pw-peach"
                                 >
                                     Place your first order
                                 </Link>
@@ -1073,10 +1275,7 @@ export default function Welcome({ services }: { services: any[] }) {
                         </Reveal>
                     </section>
 
-                    <footer className="border-t border-[#F7F1E8]/10 px-6 py-8 text-center text-xs text-[#F7F1E8]/40">
-                        © 2026 {SHOP.name} · Wash. Dry. Fold. · Pickup and
-                        delivery available
-                    </footer>
+                    <SiteFooter />
                 </div>
             </div>
         </Shell>

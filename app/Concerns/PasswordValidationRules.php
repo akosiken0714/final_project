@@ -9,12 +9,13 @@ trait PasswordValidationRules
 {
     /**
      * Get the validation rules used to validate passwords.
+     * The 128 limit only stops someone posting a gigantic "password"; real passwords are far shorter.
      *
      * @return array<int, Password|ValidationRule|array<mixed>|string>
      */
     protected function passwordRules(): array
     {
-        return ['required', 'string', Password::default(), 'confirmed'];
+        return ['required', 'string', 'max:128', Password::default(), 'confirmed'];
     }
 
     /**

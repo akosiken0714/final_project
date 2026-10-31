@@ -21,7 +21,7 @@ export default function UserAvatar({
                 src={user.avatar}
                 alt={user.name ?? 'Profile picture'}
                 style={box}
-                className="shrink-0 rounded-full object-cover ring-1 ring-[#F7F1E8]/25"
+                className="shrink-0 rounded-full object-cover ring-1 ring-pw-cream/25"
             />
         );
     }
@@ -29,7 +29,7 @@ export default function UserAvatar({
     return (
         <span
             style={box}
-            className="flex shrink-0 items-center justify-center rounded-full bg-[#F0A98B]/20 font-semibold text-[#F0A98B] ring-1 ring-[#F0A98B]/30"
+            className="flex shrink-0 items-center justify-center rounded-full bg-pw-peach/20 font-semibold text-pw-peach ring-1 ring-pw-peach/30"
             aria-hidden="true"
         >
             {initials}

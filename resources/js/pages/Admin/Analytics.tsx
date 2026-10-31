@@ -58,35 +58,35 @@ function Card({
 }) {
     return (
         <section
-            className={`rounded-3xl bg-[#F7F1E8] p-6 text-[#0F1E2B] shadow-xl ${className}`}
+            className={`rounded-3xl bg-pw-cream p-6 text-pw-ink shadow-xl ${className}`}
         >
-            <h2 className="text-[10px] tracking-[0.25em] text-[#0F1E2B]/55 uppercase">
+            <h2 className="text-xs tracking-[0.18em] text-pw-ink/70 uppercase">
                 {title}
             </h2>
-            {note && <p className="mt-1 text-xs text-[#0F1E2B]/55">{note}</p>}
+            {note && <p className="mt-1 text-xs text-pw-ink/70">{note}</p>}
             <div className="mt-4">{children}</div>
         </section>
     );
 }
 
 function Empty({ children }: { children: ReactNode }) {
-    return <p className="py-6 text-sm text-[#0F1E2B]/50">{children}</p>;
+    return <p className="py-6 text-sm text-pw-ink/70">{children}</p>;
 }
 
 function Delta({ value }: { value: number | null }) {
     if (value === null)
         return (
-            <span className="text-xs text-[#0F1E2B]/45">
+            <span className="text-xs text-pw-ink/70">
                 no earlier data to compare
             </span>
         );
     const up = value >= 0;
     return (
         <span
-            className={`text-xs font-semibold ${up ? 'text-[#2f7d52]' : 'text-[#C4441F]'}`}
+            className={`text-xs font-semibold ${up ? 'text-pw-ok' : 'text-pw-danger'}`}
         >
             {up ? '▲' : '▼'} {Math.abs(value)}%{' '}
-            <span className="font-normal text-[#0F1E2B]/45">
+            <span className="font-normal text-pw-ink/70">
                 vs previous period
             </span>
         </span>
@@ -229,14 +229,14 @@ function Heatmap({ heat }: { heat: number[][] }) {
                     {Array.from({ length: 24 }, (_, h) => (
                         <div
                             key={h}
-                            className="text-center text-[9px] text-[#0F1E2B]/50"
+                            className="text-center text-[9px] text-pw-ink/70"
                         >
                             {h % 3 === 0 ? hourLabel(h) : ''}
                         </div>
                     ))}
                     {heat.map((row, d) => (
                         <div key={d} className="contents">
-                            <div className="pr-1 text-right text-[10px] leading-5 text-[#0F1E2B]/55">
+                            <div className="pr-1 text-right text-xs leading-5 text-pw-ink/70">
                                 {DAYS[d]}
                             </div>
                             {row.map((v, h) => (
@@ -274,13 +274,13 @@ function Bars({
                 <li key={r.label}>
                     <div className="flex justify-between gap-3 text-sm">
                         <span className="truncate">{r.label}</span>
-                        <span className="shrink-0 text-[#0F1E2B]/60">
+                        <span className="shrink-0 text-pw-ink/70">
                             {r.extra ?? (format ? format(r.value) : r.value)}
                         </span>
                     </div>
-                    <div className="mt-1 h-2 rounded-full bg-[#0F1E2B]/10">
+                    <div className="mt-1 h-2 rounded-full bg-pw-ink/10">
                         <div
-                            className="h-2 rounded-full bg-[#F0A98B]"
+                            className="h-2 rounded-full bg-pw-peach"
                             style={{ width: `${(r.value / max) * 100}%` }}
                         />
                     </div>
@@ -300,12 +300,12 @@ function Fact({
     hint?: string;
 }) {
     return (
-        <div className="border-t border-dashed border-[#0F1E2B]/20 py-3 first:border-t-0 first:pt-0">
-            <p className="text-[10px] tracking-[0.2em] text-[#0F1E2B]/55 uppercase">
+        <div className="border-t border-dashed border-pw-ink/20 py-3 first:border-t-0 first:pt-0">
+            <p className="text-xs tracking-[0.2em] text-pw-ink/70 uppercase">
                 {label}
             </p>
             <p className="mt-1 font-serif text-2xl">{value}</p>
-            {hint && <p className="text-xs text-[#0F1E2B]/50">{hint}</p>}
+            {hint && <p className="text-xs text-pw-ink/70">{hint}</p>}
         </div>
     );
 }
@@ -318,13 +318,13 @@ export default function Analytics(p: Props) {
     return (
         <Shell>
             <Head title="Admin Analytics" />
-            <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+            <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                 Admin
             </p>
-            <h1 className="mt-3 font-serif text-5xl md:text-6xl">
-                Shop <span className="text-[#F0A98B] italic">analytics</span>
+            <h1 className="mt-3 font-serif text-4xl md:text-5xl">
+                Shop <span className="text-pw-peach italic">analytics</span>
             </h1>
-            <p className="mt-3 max-w-xl text-[#F7F1E8]/60">
+            <p className="mt-3 max-w-xl text-pw-cream/60">
                 Times are in Philippine time. Revenue counts completed orders
                 only.
             </p>
@@ -335,14 +335,14 @@ export default function Analytics(p: Props) {
                         key={r}
                         href={`/admin/analytics?range=${r}`}
                         preserveScroll
-                        className={`rounded-full border px-4 py-1.5 text-sm transition ${r === p.range ? 'border-[#F0A98B] bg-[#F0A98B] font-semibold text-[#0F1E2B]' : 'border-[#F7F1E8]/30 text-[#F7F1E8] hover:border-[#F0A98B]'}`}
+                        className={`rounded-full border px-4 py-1.5 text-sm transition ${r === p.range ? 'border-pw-peach bg-pw-peach font-semibold text-pw-ink' : 'border-pw-cream/30 text-pw-cream hover:border-pw-peach'}`}
                     >
                         {r === 365 ? '1 year' : `${r} days`}
                     </Link>
                 ))}
                 <a
                     href={`/admin/analytics/export?range=${p.range}`}
-                    className="ml-auto rounded-full border border-[#F7F1E8]/30 px-4 py-1.5 text-sm text-[#F7F1E8] transition hover:border-[#F0A98B] hover:text-[#F0A98B]"
+                    className="ml-auto rounded-full border border-pw-cream/30 px-4 py-1.5 text-sm text-pw-cream transition hover:border-pw-peach hover:text-pw-peach"
                 >
                     Download CSV
                 </a>
@@ -394,7 +394,7 @@ export default function Analytics(p: Props) {
                     <>
                         <Heatmap heat={p.heat} />
                         {p.peak.day && (
-                            <p className="mt-4 text-sm text-[#0F1E2B]/70">
+                            <p className="mt-4 text-sm text-pw-ink/70">
                                 Busiest day: <b>{p.peak.day}</b> · Busiest hour:{' '}
                                 <b>{p.peak.hour}</b>
                             </p>
@@ -449,7 +449,7 @@ export default function Analytics(p: Props) {
                             hint="ordered before this period"
                         />
                     </div>
-                    <h3 className="mt-5 text-[10px] tracking-[0.2em] text-[#0F1E2B]/55 uppercase">
+                    <h3 className="mt-5 text-xs tracking-[0.2em] text-pw-ink/70 uppercase">
                         Top customers
                     </h3>
                     {customers.top.length ? (
@@ -462,7 +462,7 @@ export default function Analytics(p: Props) {
                                     <span className="truncate">
                                         {i + 1}. {c.name}
                                     </span>
-                                    <span className="shrink-0 text-[#0F1E2B]/60">
+                                    <span className="shrink-0 text-pw-ink/70">
                                         {c.orders} order
                                         {c.orders === 1 ? '' : 's'} ·{' '}
                                         {peso(c.spent)}
@@ -517,7 +517,7 @@ export default function Analytics(p: Props) {
                                         #{String(o.id).padStart(4, '0')} ·{' '}
                                         {o.status}
                                     </span>
-                                    <span className="text-[#0F1E2B]/60">
+                                    <span className="text-pw-ink/70">
                                         {duration(o.hours)}
                                     </span>
                                 </li>

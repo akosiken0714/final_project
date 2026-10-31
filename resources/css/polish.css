@@ -1,0 +1,133 @@
+/* =====================================================================================================
+   PhineWash polish layer (update 12). Add ONE line at the very end of resources/css/app.css:
+       @import './polish.css';
+   Nothing here changes the hero, the page background color or any layout. It adds:
+     1. design tokens (every color the site uses, once, with a name)
+     2. the missing button variants (so every button can use `btn` + one variant)
+     3. phone fixes: no iOS zoom on inputs, 44px touch targets, no tap delay, no sticky hover
+   The written rules live in docs/DESIGN-SYSTEM.md.
+   ===================================================================================================== */
+
+/* ---------- 1. tokens ---------- */
+@theme {
+    /* Core brand colors (pw-navy, pw-cream, pw-peach, pw-sky already exist in app.css). */
+    --color-pw-ink: #0f1e2b; /* text and dark buttons on cream paper */
+    --color-pw-rust: #a5532f; /* links and small accents on cream (4.8:1 on cream; fine for text) */
+    --color-pw-rust-deep: #8a3f1f;
+    --color-pw-clay: #c96f48; /* borders and hovers that go with rust */
+    --color-pw-steel: #5c8ca8; /* cool secondary accent */
+    --color-pw-deep: #1f4a63; /* text on steel tints */
+    --color-pw-linen: #efe7d8; /* slightly darker cream, for wells and maps */
+
+    /* Status colors. Always pair with a word or an icon, never color alone. */
+    --color-pw-ok: #2f7d52;
+    --color-pw-ok-deep: #1f5a40;
+    --color-pw-warn: #c9822a;
+    --color-pw-danger: #b33a1a;
+}
+
+:root {
+    /* Motion: three speeds and one curve. Hover and press = fast, panels and page = base. */
+    --pw-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --pw-fast: 150ms;
+    --pw-base: 220ms;
+    --pw-slow: 400ms;
+}
+
+/* ---------- 2. button variants (use with `.btn`; 44px tall, 150ms, lift + press come from `.btn`) ---------- */
+@layer components {
+    /* Primary on dark backgrounds: the one call-to-action of a screen area. */
+    .btn-peach {
+        background: var(--color-pw-peach);
+        color: var(--color-pw-navy);
+    }
+    .btn-peach:hover:not(:disabled) {
+        background: var(--color-pw-cream);
+    }
+
+    /* Secondary on cream paper. */
+    .btn-outline {
+        border: 1px solid color-mix(in oklab, var(--color-pw-ink) 25%, transparent);
+        color: var(--color-pw-ink);
+    }
+    .btn-outline:hover:not(:disabled) {
+        background: color-mix(in oklab, var(--color-pw-ink) 6%, transparent);
+    }
+
+    /* Destructive actions (cancel an order, remove access). Always confirm before running them. */
+    .btn-danger {
+        background: var(--color-pw-danger);
+        color: #fff;
+    }
+    .btn-danger:hover:not(:disabled) {
+        background: var(--color-pw-rust-deep);
+    }
+
+    /* Quiet = a text link that behaves like a button. Still 44px tall to tap, but looks like text. */
+    .btn.btn-quiet {
+        padding-inline: 0.5rem;
+        border-radius: 0.5rem;
+        color: var(--color-pw-rust);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    .btn.btn-quiet:hover:not(:disabled) {
+        color: var(--color-pw-rust-deep);
+        transform: none;
+    }
+
+    /* Smaller button for dense tables. Still 44px tall on touch screens (see below). */
+    .btn.btn-sm {
+        min-height: 2.25rem;
+        padding: 0.375rem 1rem;
+        font-size: 0.8125rem;
+    }
+}
+
+/* ---------- 3. phone and touch fixes (plain CSS on purpose: it must beat the Tailwind utility classes) ---------- */
+
+/* iPhones zoom into any input smaller than 16px and never zoom back out. Keep fields at 16px on phones. */
+@media (max-width: 767px) {
+    select,
+    textarea,
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']):not([data-input-otp]) {
+        font-size: 16px;
+    }
+}
+
+/* Finger-sized controls: 44px minimum on touch screens (mouse users keep the compact size). */
+@media (pointer: coarse) {
+    select,
+    textarea,
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']):not([data-input-otp]) {
+        min-height: 2.75rem;
+    }
+    .btn.btn-sm {
+        min-height: 2.75rem;
+    }
+}
+
+/* A touch screen has no hover, so do not leave a button "lifted" after a tap. */
+@media (hover: none) {
+    .btn:hover:not(:disabled) {
+        transform: none;
+    }
+}
+
+/* No 300ms tap delay and no accidental double-tap zoom on controls. */
+a,
+button,
+summary,
+label,
+select,
+input,
+[role='button'] {
+    touch-action: manipulation;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    /* Jump links (#pricing, #faq) stop below the sticky top bar instead of hiding under it. */
+    scroll-padding-top: 5rem;
+}

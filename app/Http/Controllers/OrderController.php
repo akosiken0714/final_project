@@ -14,6 +14,8 @@ use App\Support\PhotoSanitizer;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,7 +27,13 @@ class OrderController extends Controller
     {
         $user = $request->user();
         $mine = Order::where('user_id', $user->id);
-        $list = OrderViews::resolve($request, $mine, ['service'], true);
+        // Each finished order also carries the customer's star rating (if the ratings table exists yet).
+        $with = Schema::hasTable('order_ratings') ? ['service', 'rating'] : ['service'];
+        // What the shop recorded at the counter (item count, condition notes, photo). Only after `php artisan migrate`.
+        if (Schema::hasTable('order_intakes')) {
+            $with[] = 'intake.receiver';
+        }
+        $list = OrderViews::resolve($request, $mine, $with, true);
 
         // Stats and "Reorder last" use ALL of this customer's orders, whichever tab is open.
         $last = Order::where('user_id', $user->id)->latest()->orderByDesc('id')->first(['id', 'service_id', 'quantity']);
@@ -51,6 +59,7 @@ class OrderController extends Controller
             'maxSaved' => SavedOrder::MAX_PER_USER,
             'zone' => DeliveryZone::forPage(),
             'demoPayments' => Payments::isDemo(),
+            'readyHours' => (int) config('laundry.shop.ready_hours', 24),
         ]);
     }
 
@@ -79,6 +88,8 @@ class OrderController extends Controller
             'delivery_fee' => $zone['fee'] ?? 0,
             'payment_method' => $v['payment_method'],
             'payment_status' => Order::UNPAID,
+            'pickup_date' => $v['pickup_date'] ?? null,
+            'pickup_slot' => $v['pickup_slot'] ?? null,
         ];
 
         if ($request->hasFile('photo')) {
@@ -132,10 +143,52 @@ class OrderController extends Controller
     /**
      * @return StreamedResponse
      */
+    // A printable receipt / claim slip. The customer who owns the order, or an admin, can open it.
+    // Cancelled orders have nothing to claim, so they get no receipt.
+    public function receipt(Request $request, Order $order): \Inertia\Response
+    {
+        $user = $request->user();
+        abort_unless($user->isShop() || $order->user_id === $user->id, 404);
+        abort_if($order->status === Order::CANCELLED, 404);
+
+        $order->load(['service', 'user']);
+        // Items counted at the counter (only after `php artisan migrate`).
+        $items = Schema::hasTable('order_intakes') ? $order->intake?->item_count : null;
+
+        return Inertia::render('Orders/Receipt', [
+            'order' => [
+                'id' => $order->id,
+                'status' => $order->status,
+                'created_at' => $order->created_at?->toIso8601String(),
+                'fulfillment' => $order->fulfillment,
+                'address' => $order->address,
+                'pickup_date' => $order->pickup_date?->format('Y-m-d'),
+                'pickup_slot' => $order->pickup_slot,
+                'instructions' => $order->instructions,
+                'quantity' => $order->quantity,
+                'total' => (float) $order->total,
+                'delivery_fee' => (float) $order->delivery_fee,
+                'amount_due' => $order->amount_due,
+                'payment_method' => $order->payment_method,
+                'payment_status' => $order->payment_status,
+                'payment_reference' => $order->payment_reference,
+                'paid_at' => $order->paid_at?->toIso8601String(),
+                'items_received' => $items,
+            ],
+            'service' => [
+                'name' => $order->service?->name,
+                'unit' => $order->service?->unit,
+                'price' => $order->service ? (float) $order->service->price : null,
+            ],
+            'customer' => ['name' => $order->user?->name, 'phone' => $order->user?->phone],
+            'backUrl' => $user->isShop() ? '/admin' : '/orders',
+        ]);
+    }
+
     public function photo(Request $request, Order $order)
     {
         $user = $request->user();
-        abort_unless($order->photo && ($user->isAdmin() || $order->user_id === $user->id), 404);
+        abort_unless($order->photo && ($user->isShop() || $order->user_id === $user->id), 404);
 
         // Older photos may still sit in the public folder, so check both.
         $disk = $this->photoDisk($order->photo);
@@ -164,6 +217,37 @@ class OrderController extends Controller
         }
 
         return back()->with('success', 'Photo removed.');
+    }
+
+    // The customer cancels their own order, only while it is still Pending and not yet paid.
+    public function cancel(Request $request, Order $order): RedirectResponse
+    {
+        abort_unless($order->user_id === $request->user()->id, 404);
+
+        if ($order->status !== 'Pending') {
+            return back()->withErrors(['cancel' => 'We already started this order, so it can no longer be cancelled here. Please contact the shop.']);
+        }
+
+        if ($order->isPaid()) {
+            return back()->withErrors(['cancel' => 'This order is already paid. Please contact the shop to cancel it and arrange a refund.']);
+        }
+
+        $order->update(['status' => Order::CANCELLED]);
+
+        DB::table('order_status_logs')->insert([
+            'order_id' => $order->id,
+            'changed_by' => $request->user()->id,
+            'from_status' => 'Pending',
+            'to_status' => Order::CANCELLED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $tag = Activity::tag($order->id);
+        Activity::log('order.cancelled', "Order {$tag} cancelled by the customer", $order, $request->user()->id);
+        Activity::notifyAdmins("Order {$tag} was cancelled", ($request->user()->name ?? 'A customer').' cancelled this order before it started.', '/admin', $order->id);
+
+        return back()->with('success', "Order {$tag} cancelled.");
     }
 
     // Returns the disk that actually holds this photo, or null if the file is gone.

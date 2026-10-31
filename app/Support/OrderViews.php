@@ -11,7 +11,8 @@ use Illuminate\Http\Request;
 //   Finished = Ready for Pickup + Completed orders
 class OrderViews
 {
-    public const VIEWS = ['ongoing', 'finished'];
+    // 'cancelled' is an admin-only list; a customer asking for it just gets Ongoing.
+    public const VIEWS = ['ongoing', 'finished', 'cancelled'];
 
     private const STEP = 10;
 
@@ -25,6 +26,9 @@ class OrderViews
     public static function resolve(Request $request, Builder $base, array $with = [], bool $customerView = false): array
     {
         $view = in_array($request->query('view'), self::VIEWS, true) ? $request->query('view') : 'ongoing';
+        if ($view === 'cancelled' && $customerView) {
+            $view = 'ongoing';
+        }
         $limit = min(self::MAX, max(self::STEP, (int) $request->query('limit', self::STEP)));
 
         $newest = fn (Builder $q) => $q->with($with)->latest()->orderByDesc('id');
@@ -44,6 +48,10 @@ class OrderViews
                 $ongoingQuery->ongoing();
             }
             $orders = $newest($ongoingQuery)->get();
+        } elseif ($view === 'cancelled') {
+            $rows = $newest((clone $base)->where('status', Order::CANCELLED))->limit($limit + 1)->get();
+            $hasMore = $rows->count() > $limit && $limit < self::MAX;
+            $orders = $rows->take($limit)->values();
         } else {
             $readyQuery = (clone $base)->where('status', Order::READY);
             if (! $customerView) {
@@ -51,7 +59,8 @@ class OrderViews
             $ready = $newest($readyQuery)->get();
 
             // One extra row just to know if a "Load more" button is needed.
-            $rows = $newest((clone $base)->where('status', Order::CLAIMED))->limit($limit + 1)->get();
+            $doneStatuses = $customerView ? [Order::CLAIMED, Order::CANCELLED] : [Order::CLAIMED];
+            $rows = $newest((clone $base)->whereIn('status', $doneStatuses))->limit($limit + 1)->get();
             $hasMore = $rows->count() > $limit && $limit < self::MAX;
 
             $orders = $ready->concat($rows->take($limit))->values();
@@ -66,6 +75,8 @@ class OrderViews
         } else {
         }
         $claimed = (int) ($by[Order::CLAIMED] ?? 0);
+        $cancelledAll = (int) ($by[Order::CANCELLED] ?? 0);
+        $cancelled = $customerView ? $cancelledAll : 0;
 
         return [
             'orders' => $orders,
@@ -74,9 +85,10 @@ class OrderViews
             'nextLimit' => min(self::MAX, $limit + self::STEP),
             'counts' => [
                 'ongoing' => $ongoing,
-                'finished' => $ready + $claimed,
+                'finished' => $ready + $claimed + $cancelled,
                 'ready' => $ready,
                 'claimed' => $claimed,
+                'cancelled' => $cancelledAll,
             ],
         ];
     }

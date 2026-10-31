@@ -50,7 +50,7 @@ export default function AuthSimpleLayout({
     const firstWords = words.join(' ');
 
     return (
-        <div className="relative flex min-h-svh flex-col overflow-hidden bg-[#0B1F26] text-[#F7F1E8]">
+        <div className="relative flex min-h-svh flex-col overflow-hidden bg-pw-navy text-pw-cream">
             <div
                 className="pointer-events-none absolute inset-0"
                 aria-hidden="true"
@@ -74,12 +74,12 @@ export default function AuthSimpleLayout({
             <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
                 <Link
                     href={home()}
-                    className="text-sm text-[#F7F1E8]/60 transition hover:text-[#F0A98B]"
+                    className="text-sm text-pw-cream/60 transition hover:text-pw-peach"
                 >
                     ← Back to home
                 </Link>
                 <span className="font-serif text-xl">
-                    PhineWash<span className="text-[#F0A98B] italic">.</span>
+                    PhineWash<span className="text-pw-peach italic">.</span>
                 </span>
             </header>
 
@@ -92,7 +92,7 @@ export default function AuthSimpleLayout({
                         {firstWords && (
                             <span className="block">{firstWords}</span>
                         )}
-                        <span className="block text-[#F0A98B] italic">
+                        <span className="block text-pw-peach italic">
                             {lastWord}
                         </span>
                     </h1>
@@ -113,7 +113,7 @@ export default function AuthSimpleLayout({
                     </svg>
 
                     {description && (
-                        <p className="mt-6 max-w-sm text-base text-[#F7F1E8]/65 md:text-lg">
+                        <p className="mt-6 max-w-sm text-base text-pw-cream/65 md:text-lg">
                             {description}
                         </p>
                     )}
@@ -121,7 +121,7 @@ export default function AuthSimpleLayout({
 
                 <div className="relative">
                     <SewnButton className="absolute -top-8 -left-5 z-10 h-20 w-20 md:-left-8 md:h-24 md:w-24" />
-                    <div className="auth-panel relative w-full rounded-[1.75rem] bg-[#F7F1E8] p-10 pt-14 text-[#0F1E2B] shadow-2xl">
+                    <div className="auth-panel relative w-full rounded-[1.75rem] bg-pw-cream p-10 pt-14 text-pw-ink shadow-2xl">
                         {children}
                     </div>
                 </div>

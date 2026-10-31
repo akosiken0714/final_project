@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Order;
 use App\Models\SavedOrder;
+use App\Services\Payments\Payments;
 use App\Support\DeliveryZone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,7 +34,7 @@ class StoreOrderRequest extends FormRequest
         $delivery = $this->input('fulfillment') === Order::DELIVERY;
 
         return [
-            'service_id' => ['required', Rule::exists('services', 'id')->where('active', true)],
+            'service_id' => ['required', Rule::exists('services', 'id')->where(fn ($q) => $q->where('active', true)->whereNull('deleted_at'))],
             'quantity' => ['required', 'integer', 'min:1', 'max:100'],
             'fulfillment' => ['required', Rule::in(Order::FULFILLMENTS)],
             // Delivery needs an address and a pin on the map. Drop-off needs neither.
@@ -41,6 +42,9 @@ class StoreOrderRequest extends FormRequest
             'lat' => $delivery ? ['required', 'numeric', 'between:-90,90'] : ['nullable'],
             'lng' => $delivery ? ['required', 'numeric', 'between:-180,180'] : ['nullable'],
             'payment_method' => ['required', Rule::in(Order::PAYMENT_METHODS)],
+            // optional: the day and part of the day we should collect (or the customer will drop off)
+            'pickup_date' => ['nullable', 'date', 'after_or_equal:today', 'before_or_equal:+7 days'],
+            'pickup_slot' => ['nullable', Rule::in(Order::SLOTS)],
             'instructions' => ['nullable', 'string', 'max:500'],
             'photo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'photo_confirmed' => $this->hasFile('photo') ? ['accepted'] : ['nullable'],
@@ -61,6 +65,12 @@ class StoreOrderRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($v) {
+            // GCash needs a working payment gateway. On a live site the demo one is switched off,
+            // so refuse here, before anything is saved, and point the customer to cash.
+            if ($this->input('payment_method') === Order::GCASH && ! Payments::enabled()) {
+                $v->errors()->add('payment_method', 'Online payment is not available right now. Please choose cash.');
+            }
+
             if ($v->errors()->isNotEmpty()) {
                 return;
             }
@@ -97,6 +107,9 @@ class StoreOrderRequest extends FormRequest
             'address.min' => 'Please enter a fuller address.',
             'lat.required' => 'Drop a pin on the map so we know where to go.',
             'lng.required' => 'Drop a pin on the map so we know where to go.',
+            'pickup_date.after_or_equal' => 'Pick today or a later day.',
+            'pickup_date.before_or_equal' => 'You can schedule up to 7 days ahead.',
+            'pickup_date.date' => 'Pick a valid date.',
             'photo.mimes' => 'Photo must be a JPG, PNG or WebP.',
             'photo.max' => 'Photo must be 4 MB or smaller.',
             'photo_confirmed.accepted' => 'Please tick the box to confirm your photo.',

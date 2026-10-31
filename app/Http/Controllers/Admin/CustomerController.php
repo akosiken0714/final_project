@@ -12,23 +12,23 @@ class CustomerController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('q', ''));
+        $search = trim($this->text($request, 'q'));
 
-        $people = User::withCount('orders')
+        $people = User::where('role', User::CUSTOMER)
+            ->withCount('orders')
             ->when($search !== '', function ($q) use ($search) {
                 $like = '%'.str_replace(['%', '_'], '', $search).'%';
                 $q->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('phone', 'like', $like));
             })
-            ->orderByRaw("role = 'admin' desc")
             ->latest()
-            ->get();
+            ->paginate(24)
+            ->withQueryString();
 
         return Inertia::render('Admin/Customers', [
             'customers' => $people,
             'search' => $search,
             'totals' => [
-                'customers' => User::where('role', 'customer')->count(),
-                'admins' => User::where('role', 'admin')->count(),
+                'customers' => User::where('role', User::CUSTOMER)->count(),
             ],
         ]);
     }

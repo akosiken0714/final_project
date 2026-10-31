@@ -6,7 +6,7 @@ use App\Concerns\ProfileValidationRules;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
-use App\Models\User;
+use App\Models\Order;
 use App\Support\AvatarStore;
 use App\Support\DeliveryZone;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -90,8 +90,25 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        if ($user->isAdmin() && User::where('role', 'admin')->count() <= 1) {
-            return back()->withErrors(['password' => "You're the only admin, so this account can't be deleted."]);
+        // Admins never delete themselves from here: removing an admin goes through People > Delete account,
+        // where another admin confirms with their own password, and it is saved in the activity log.
+        // (Checked on the server, because hiding the button alone is not security.)
+        if ($user->isAdmin()) {
+            return back()->withErrors(['password' => "Admins can't delete their own account. Ask another admin to remove it from the People page."]);
+        }
+
+        // Staff (cashier) accounts are managed by an admin too, so the shop is never left without its team by accident.
+        if ($user->isStaff()) {
+            return back()->withErrors(['password' => "Staff can't delete their own account. Ask an admin to remove your access."]);
+        }
+
+        // Same rule as the admin delete: no orphaned laundry. Finish or cancel the orders first.
+        $unfinished = $user->orders()->whereNotIn('status', [Order::CLAIMED, Order::CANCELLED])->count();
+        if ($unfinished > 0) {
+            $word = $unfinished === 1 ? 'order' : 'orders';
+            $done = $unfinished === 1 ? 'it is' : 'they are';
+
+            return back()->withErrors(['password' => "You still have {$unfinished} unfinished {$word}. Please wait until {$done} done, or cancel a Pending one, then try again."]);
         }
 
         $oldAvatar = $user->avatar_path;

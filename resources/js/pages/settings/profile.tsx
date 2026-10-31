@@ -208,7 +208,7 @@ export default function Profile({
                             </div>
 
                             {/* Customers only: admins don't place orders, so no pickup spot */}
-                            {user.role !== 'admin' && (
+                            {user.role === 'customer' && (
                                 <div className="rounded-xl border p-4">
                                     <p className="text-sm font-semibold">
                                         Usual pickup &amp; delivery spot
@@ -380,7 +380,8 @@ export default function Profile({
                 </Form>
             </div>
 
-            <DeleteUser />
+            {/* Admins and staff are managed by an admin, so they don't get this button. */}
+            {user.role === 'customer' && <DeleteUser />}
         </>
     );
 }

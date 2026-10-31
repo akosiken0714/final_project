@@ -3,7 +3,7 @@ import Shell from '@/components/Shell';
 import { useState } from 'react';
 
 const field =
-    'border-0 border-b border-[#0F1E2B]/30 bg-transparent px-0 py-2 text-[#0F1E2B] outline-none transition focus:border-[#0F1E2B] focus:shadow-[0_1px_0_0_#F0A98B]';
+    'border-0 border-b border-pw-ink/30 bg-transparent px-0 py-2 text-pw-ink outline-none transition focus:border-pw-ink focus:shadow-[0_1px_0_0_#F0A98B]';
 
 function Row({ s }: { s: any }) {
     const [name, setName] = useState(s.name);
@@ -30,7 +30,7 @@ function Row({ s }: { s: any }) {
     };
 
     return (
-        <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-[#F7F1E8] p-4 text-[#0F1E2B] shadow-lg">
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-pw-cream p-4 text-pw-ink shadow-lg">
             <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -53,7 +53,7 @@ function Row({ s }: { s: any }) {
             <button
                 onClick={save}
                 disabled={!dirty}
-                className="rounded-full bg-[#0F1E2B] px-5 py-2 text-xs font-semibold tracking-widest text-[#F7F1E8] uppercase transition hover:bg-[#F0A98B] hover:text-[#0F1E2B] disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full bg-pw-ink px-5 py-2 text-sm font-semibold text-pw-cream transition hover:bg-pw-peach hover:text-pw-ink disabled:cursor-not-allowed disabled:opacity-40"
             >
                 Save
             </button>
@@ -65,13 +65,13 @@ function Row({ s }: { s: any }) {
                         { preserveScroll: true },
                     )
                 }
-                className={`rounded-full border px-5 py-2 text-xs font-semibold tracking-widest uppercase transition ${s.active ? 'border-[#0F1E2B]/40 text-[#0F1E2B] hover:bg-[#0F1E2B]/10' : 'border-[#C96F48] text-[#C96F48] hover:bg-[#C96F48]/10'}`}
+                className={`rounded-full border px-5 py-2 text-sm font-semibold transition ${s.active ? 'border-pw-ink/40 text-pw-ink hover:bg-pw-ink/10' : 'border-pw-clay text-pw-rust hover:bg-pw-clay/10'}`}
             >
                 {s.active ? 'Active' : 'Hidden'}
             </button>
             <button
                 onClick={remove}
-                className="rounded-full border border-[#C96F48]/60 px-5 py-2 text-xs font-semibold tracking-widest text-[#C96F48] uppercase transition hover:bg-[#C96F48] hover:text-[#F7F1E8]"
+                className="rounded-full border border-pw-clay/60 px-5 py-2 text-sm font-semibold text-pw-rust transition hover:bg-pw-clay hover:text-pw-cream"
             >
                 Delete
             </button>
@@ -88,14 +88,14 @@ export default function Services({ services }: { services: any[] }) {
     return (
         <Shell>
             <Head title="Pricing" />
-            <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+            <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                 Admin
             </p>
-            <h1 className="mt-3 font-serif text-5xl md:text-6xl">
-                Price <span className="text-[#F0A98B] italic">list</span>
+            <h1 className="mt-3 font-serif text-4xl md:text-5xl">
+                Price <span className="text-pw-peach italic">list</span>
             </h1>
 
-            <div className="mt-10 grid gap-3">
+            <div className="mt-8 grid gap-4">
                 {services.map((s) => (
                     <Row key={s.id + '-' + s.price} s={s} />
                 ))}
@@ -106,9 +106,9 @@ export default function Services({ services }: { services: any[] }) {
                     e.preventDefault();
                     post('/admin/services', { onSuccess: () => reset() });
                 }}
-                className="mt-10 rounded-3xl bg-[#F7F1E8] p-6 text-[#0F1E2B] shadow-xl"
+                className="mt-10 rounded-3xl bg-pw-cream p-6 text-pw-ink shadow-xl"
             >
-                <p className="text-[10px] tracking-[0.3em] text-[#0F1E2B]/50 uppercase">
+                <p className="text-xs tracking-[0.3em] text-pw-ink/70 uppercase">
                     New service
                 </p>
                 <div className="mt-3 flex flex-wrap items-end gap-4">
@@ -136,7 +136,7 @@ export default function Services({ services }: { services: any[] }) {
                         value={data.price}
                         onChange={(e) => setData('price', e.target.value)}
                     />
-                    <button className="rounded-full bg-[#0F1E2B] px-6 py-2 text-sm font-semibold text-[#F7F1E8] transition hover:bg-[#F0A98B] hover:text-[#0F1E2B]">
+                    <button className="rounded-full bg-pw-ink px-6 py-2 text-sm font-semibold text-pw-cream transition hover:bg-pw-peach hover:text-pw-ink">
                         + Add
                     </button>
                 </div>

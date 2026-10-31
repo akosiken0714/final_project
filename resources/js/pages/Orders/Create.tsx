@@ -1,5 +1,13 @@
 ﻿import Req from '@/components/Req';
 import { useForm, Head, usePage } from '@inertiajs/react';
+import {
+    Banknote,
+    Camera,
+    ChevronDown,
+    Smartphone,
+    Store,
+    Truck,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import LocationPicker from '@/components/LocationPicker';
 import Shell from '@/components/Shell';
@@ -9,10 +17,33 @@ import { directionsLink, reverseGeocode, round6 } from '@/lib/geo';
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_MB = 4;
 const VISIBLE_CHIPS = 5;
+const money = (n: number) =>
+    '₱' +
+    n.toLocaleString('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 const fmt = (b: number) =>
     b > 1024 * 1024
         ? `${(b / 1024 / 1024).toFixed(1)} MB`
         : `${Math.round(b / 1024)} KB`;
+
+// A numbered heading, so the long form reads as three short steps.
+function StepHead({ n, title }: { n: number; title: string }) {
+    return (
+        <div className="mb-3 flex items-center gap-3">
+            <span
+                aria-hidden="true"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pw-ink font-sans text-xs font-semibold text-pw-cream"
+            >
+                {n}
+            </span>
+            <h2 className="font-serif text-2xl leading-tight text-pw-ink">
+                {title}
+            </h2>
+        </div>
+    );
+}
 
 export default function Create({
     services,
@@ -20,12 +51,14 @@ export default function Create({
     maxSaved = 20,
     zone,
     demoPayments = true,
+    readyHours = 24,
 }: {
     services: any[];
     saved?: any[];
     maxSaved?: number;
     zone: Zone;
     demoPayments?: boolean;
+    readyHours?: number;
 }) {
     const { auth }: any = usePage().props;
     const q = new URLSearchParams(
@@ -60,6 +93,8 @@ export default function Create({
                   saved_order_id: '',
               }),
         payment_method: 'cash',
+        pickup_date: '',
+        pickup_slot: '',
         photo: null,
         photo_confirmed: false,
         save_as: '',
@@ -68,11 +103,9 @@ export default function Create({
 
     const [loaded, setLoaded] = useState<any>(fromSaved ?? null);
     const [saveIt, setSaveIt] = useState(false);
-    const [moreOpen, setMoreOpen] = useState(false);
     const [locating, setLocating] = useState(false);
     const [locError, setLocError] = useState('');
     const [findingAddress, setFindingAddress] = useState(false);
-    const moreRef = useRef<HTMLDivElement>(null);
 
     const [photoError, setPhotoError] = useState('');
     const fileRef = useRef<HTMLInputElement>(null);
@@ -87,23 +120,18 @@ export default function Create({
         [preview],
     );
 
-    // Close the "More…" list when clicking elsewhere or pressing Escape.
+    // The floating total bar shows only while the real submit button is off screen.
+    const submitRef = useRef<HTMLButtonElement>(null);
+    const [submitInView, setSubmitInView] = useState(false);
     useEffect(() => {
-        if (!moreOpen) return;
-        const away = (e: MouseEvent) => {
-            if (!moreRef.current?.contains(e.target as Node))
-                setMoreOpen(false);
-        };
-        const esc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setMoreOpen(false);
-        };
-        document.addEventListener('mousedown', away);
-        document.addEventListener('keydown', esc);
-        return () => {
-            document.removeEventListener('mousedown', away);
-            document.removeEventListener('keydown', esc);
-        };
-    }, [moreOpen]);
+        const el = submitRef.current;
+        if (!el || typeof IntersectionObserver === 'undefined') return;
+        const io = new IntersectionObserver(([e]) =>
+            setSubmitInView(e.isIntersecting),
+        );
+        io.observe(el);
+        return () => io.disconnect();
+    }, []);
 
     const delivery = data.fulfillment === 'delivery';
     const pin =
@@ -135,6 +163,14 @@ export default function Create({
     const fee = delivery && zoneQuote?.deliverable ? Number(zoneQuote.fee) : 0;
     const total = laundry + fee;
     const gcash = data.payment_method === 'gcash';
+    // Say "kilos" or "loads" once a service is chosen, so nobody has to guess the unit.
+    const qtyLabel = !picked
+        ? 'Kilos / loads'
+        : picked.unit === 'kg'
+          ? 'How many kilos?'
+          : picked.unit === 'load'
+            ? 'How many loads?'
+            : `How many (${picked.unit})?`;
 
     // Why the button is greyed out, so the customer is never left guessing.
     const lockReason = !picked
@@ -164,7 +200,6 @@ export default function Create({
     const chooseSaved = (x: any) => {
         setLoaded(x);
         setSaveIt(false);
-        setMoreOpen(false);
         setData((d: any) => ({ ...d, ...fill(x), save_as: '' }));
     };
 
@@ -261,14 +296,14 @@ export default function Create({
         setData((d: any) => ({ ...d, photo: f, photo_confirmed: false }));
     };
 
-    const label = 'text-[10px] uppercase tracking-[0.25em] text-[#0F1E2B]/55';
+    const label = 'text-sm font-medium text-pw-ink/80';
     const field =
-        'mt-1 w-full border-0 border-b border-[#0F1E2B]/30 bg-transparent px-0 py-2 text-base text-[#0F1E2B] outline-none transition focus:border-[#0F1E2B] focus:shadow-[0_1px_0_0_#F0A98B]';
+        'mt-1 w-full border-0 border-b border-pw-ink/30 bg-transparent px-0 py-2 text-base text-pw-ink outline-none transition focus:border-pw-ink focus:shadow-[0_1px_0_0_#F0A98B]';
     const err = (k: string) =>
         errors[k] && <p className="mt-1 text-sm text-red-600">{errors[k]}</p>;
 
     const choice = (on: boolean) =>
-        `rounded-2xl border p-4 text-left transition ${on ? 'border-[#0F1E2B] bg-[#0F1E2B] text-[#F7F1E8]' : 'border-[#0F1E2B]/25 hover:bg-[#0F1E2B]/5'}`;
+        `rounded-2xl border p-4 text-left transition ${on ? 'border-pw-ink bg-pw-ink text-pw-cream' : 'border-pw-ink/25 hover:bg-pw-ink/5'}`;
 
     const chip = (x: any) => {
         const on = loaded?.id === x.id;
@@ -278,7 +313,7 @@ export default function Create({
                 key={x.id}
                 aria-pressed={on}
                 onClick={() => chooseSaved(x)}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${on ? 'bg-[#0F1E2B] text-[#F7F1E8]' : 'border border-[#0F1E2B]/25 text-[#0F1E2B] hover:bg-[#0F1E2B]/5'}`}
+                className={`rounded-full px-4 py-2.5 text-sm font-semibold transition ${on ? 'bg-pw-ink text-pw-cream' : 'border border-pw-ink/25 text-pw-ink hover:bg-pw-ink/5'}`}
             >
                 {x.name}
             </button>
@@ -293,34 +328,29 @@ export default function Create({
         <Shell>
             <Head title="New Order" />
             <div className="text-center">
-                <p className="text-xs tracking-[0.3em] text-[#A9D3E6] uppercase">
+                <p className="text-xs tracking-[0.3em] text-pw-sky uppercase">
                     Book a wash
                 </p>
-                <h1 className="mt-3 font-serif text-5xl md:text-6xl">
-                    New <span className="text-[#F0A98B] italic">order</span>
+                <h1 className="mt-3 font-serif text-4xl md:text-5xl">
+                    New <span className="text-pw-peach italic">order</span>
                 </h1>
             </div>
 
-            <div className="mx-auto mt-10 flex max-w-xl flex-col items-center">
-                <div className="z-10 h-10 w-3 rounded-sm bg-[#F0A98B] shadow-md shadow-black/30" />
-                <div className="-mt-1 h-8 w-px bg-[#F7F1E8]/40" />
-
+            <div className="mx-auto mt-8 flex max-w-2xl flex-col items-center">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
                         if (!locked) post('/orders', { forceFormData: true });
                     }}
-                    className="grid w-full gap-6 rounded-[2rem] bg-[#F7F1E8] p-8 text-[#0F1E2B] shadow-2xl ring-1 shadow-black/40 ring-[#0F1E2B]/5"
+                    className="paper grid w-full gap-7 p-6 sm:p-10"
                 >
-                    <div className="mx-auto h-4 w-4 rounded-full border-2 border-[#0F1E2B]/40" />
-
                     {saved.length > 0 && (
                         <div>
                             <div className="flex items-baseline justify-between">
                                 <p className={label}>
                                     Saved orders · most recent first
                                 </p>
-                                <p className="text-[10px] tracking-widest text-[#0F1E2B]/45 uppercase">
+                                <p className="text-xs tracking-widest text-pw-ink/70 uppercase">
                                     {saved.length}/{maxSaved} saved
                                 </p>
                             </div>
@@ -328,55 +358,30 @@ export default function Create({
                                 {shownChips.map(chip)}
 
                                 {restChips.length > 0 && (
-                                    <div ref={moreRef} className="relative">
-                                        <button
-                                            type="button"
-                                            aria-haspopup="listbox"
-                                            aria-expanded={moreOpen}
-                                            onClick={() =>
-                                                setMoreOpen((o) => !o)
-                                            }
-                                            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${loadedInRest ? 'bg-[#0F1E2B] text-[#F7F1E8]' : 'border border-dashed border-[#0F1E2B]/40 text-[#0F1E2B] hover:bg-[#0F1E2B]/5'}`}
-                                        >
-                                            {loadedInRest
-                                                ? `${loadedInRest.name} ▾`
-                                                : `More… (${restChips.length}) ▾`}
-                                        </button>
-
-                                        {moreOpen && (
-                                            <div
-                                                role="listbox"
-                                                className="absolute left-0 z-20 mt-2 max-h-56 w-64 overflow-y-auto rounded-2xl border border-[#0F1E2B]/15 bg-white p-1 shadow-xl"
-                                            >
-                                                {restChips.map((x) => (
-                                                    <button
-                                                        type="button"
-                                                        role="option"
-                                                        aria-selected={
-                                                            loaded?.id === x.id
-                                                        }
-                                                        key={x.id}
-                                                        onClick={() =>
-                                                            chooseSaved(x)
-                                                        }
-                                                        className={`block w-full rounded-xl px-3 py-2 text-left text-sm transition hover:bg-[#0F1E2B]/5 ${loaded?.id === x.id ? 'bg-[#F0A98B]/30 font-semibold' : ''}`}
-                                                    >
-                                                        {x.name}
-                                                        <span className="block text-xs text-[#0F1E2B]/50">
-                                                            {x.service_name ??
-                                                                'Service removed'}{' '}
-                                                            · {x.quantity}{' '}
-                                                            {x.unit}
-                                                        </span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                    <select
+                                        aria-label="More saved orders"
+                                        value={loadedInRest ? String(loadedInRest.id) : ''}
+                                        onChange={(e) => {
+                                            const x = restChips.find(
+                                                (r) => String(r.id) === e.target.value,
+                                            );
+                                            if (x) chooseSaved(x);
+                                        }}
+                                        className={`rounded-full px-4 py-2.5 text-sm font-semibold ${loadedInRest ? 'bg-pw-ink text-pw-cream' : 'border border-dashed border-pw-ink/40 bg-transparent text-pw-ink'}`}
+                                    >
+                                        <option value="">
+                                            More saved orders ({restChips.length})
+                                        </option>
+                                        {restChips.map((x) => (
+                                            <option key={x.id} value={x.id}>
+                                                {x.name} · {x.service_name ?? 'Service removed'} · {x.quantity} {x.unit}
+                                            </option>
+                                        ))}
+                                    </select>
                                 )}
                             </div>
                             {loaded && (
-                                <p className="mt-2 text-xs text-[#0F1E2B]/60">
+                                <p className="mt-2 text-xs text-pw-ink/70">
                                     Loaded “{loaded.name}”. Change anything you
                                     like before you submit.
                                     {!loaded.available &&
@@ -390,7 +395,8 @@ export default function Create({
                     )}
 
                     <div>
-                        <p className="mb-2 text-xs text-[#0F1E2B]/55">
+                        <StepHead n={1} title="Pick your service" />
+                        <p className="mb-2 text-xs text-pw-ink/70">
                             <span className="font-semibold text-red-600">
                                 *
                             </span>{' '}
@@ -419,7 +425,7 @@ export default function Create({
 
                     <div>
                         <label htmlFor="quantity" className={label}>
-                            Kilos / loads (whole numbers) <Req />
+                            {qtyLabel} <Req />
                         </label>
                         <div className="mt-1 flex items-center gap-3">
                             <button
@@ -431,7 +437,7 @@ export default function Create({
                                         String(Math.max(1, qty - 1)),
                                     )
                                 }
-                                className="h-10 w-10 shrink-0 rounded-full border border-[#0F1E2B]/25 text-lg transition hover:bg-[#0F1E2B]/5"
+                                className="h-11 w-11 shrink-0 rounded-full border border-pw-ink/25 text-lg transition hover:bg-pw-ink/5"
                             >
                                 −
                             </button>
@@ -460,16 +466,33 @@ export default function Create({
                                         String(Math.min(100, qty + 1)),
                                     )
                                 }
-                                className="h-10 w-10 shrink-0 rounded-full border border-[#0F1E2B]/25 text-lg transition hover:bg-[#0F1E2B]/5"
+                                className="h-11 w-11 shrink-0 rounded-full border border-pw-ink/25 text-lg transition hover:bg-pw-ink/5"
                             >
                                 +
                             </button>
                         </div>
                         {err('quantity')}
+                        {picked && qty > 0 && (
+                            <p
+                                aria-live="polite"
+                                className="mt-3 rounded-2xl bg-pw-ink/5 px-4 py-3 text-sm text-pw-ink"
+                            >
+                                {qty} {picked.unit} × {money(Number(picked.price))} ={' '}
+                                <span className="font-semibold">{money(laundry)}</span>
+                                {readyHours > 0 && (
+                                    <span className="text-pw-ink/70">
+                                        {' '}· usually ready in about{' '}
+                                        {readyHours % 24 === 0
+                                            ? `${readyHours / 24} ${readyHours === 24 ? 'day' : 'days'}`
+                                            : `${readyHours} hours`}
+                                    </span>
+                                )}
+                            </p>
+                        )}
                     </div>
 
-                    <div>
-                        <p className={label}>How do we get your laundry?</p>
+                    <div className="border-t border-pw-ink/10 pt-7">
+                        <StepHead n={2} title="How do we get your laundry?" />
                         <div
                             className="mt-2 grid gap-3 sm:grid-cols-2"
                             role="radiogroup"
@@ -484,11 +507,12 @@ export default function Create({
                                 }
                                 className={choice(delivery)}
                             >
-                                <span className="block text-sm font-semibold">
-                                    We pick up &amp; deliver
-                                </span>
+                                <span className="flex items-center gap-2 text-sm font-semibold">
+<Truck aria-hidden="true" className="h-5 w-5 shrink-0" />
+<span>We pick up &amp; deliver</span>
+</span>
                                 <span
-                                    className={`block text-xs ${delivery ? 'text-[#F7F1E8]/70' : 'text-[#0F1E2B]/55'}`}
+                                    className={`block text-xs ${delivery ? 'text-pw-cream/70' : 'text-pw-ink/70'}`}
                                 >
                                     From ₱{zone.tiers[0]?.fee ?? 0} delivery
                                     fee, by distance
@@ -503,17 +527,62 @@ export default function Create({
                                 }
                                 className={choice(!delivery)}
                             >
-                                <span className="block text-sm font-semibold">
-                                    I&apos;ll drop off &amp; collect
-                                </span>
+                                <span className="flex items-center gap-2 text-sm font-semibold">
+<Store aria-hidden="true" className="h-5 w-5 shrink-0" />
+<span>I&apos;ll drop off &amp; collect</span>
+</span>
                                 <span
-                                    className={`block text-xs ${!delivery ? 'text-[#F7F1E8]/70' : 'text-[#0F1E2B]/55'}`}
+                                    className={`block text-xs ${!delivery ? 'text-pw-cream/70' : 'text-pw-ink/70'}`}
                                 >
                                     At the shop. No fee, no address needed
                                 </span>
                             </button>
                         </div>
                         {err('fulfillment')}
+                    </div>
+
+                    <div>
+                        <p className={label}>
+                            {delivery
+                                ? 'When should we come? (optional)'
+                                : 'When will you drop it off? (optional)'}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                            <input
+                                type="date"
+                                aria-label="Preferred day"
+                                value={data.pickup_date}
+                                min={new Date().toISOString().slice(0, 10)}
+                                max={new Date(Date.now() + 7 * 86400000)
+                                    .toISOString()
+                                    .slice(0, 10)}
+                                onChange={(e) =>
+                                    setData('pickup_date', e.target.value)
+                                }
+                                className="rounded-xl border border-pw-ink/25 bg-white px-4 py-3 text-base"
+                            />
+                            {[
+                                ['morning', 'Morning'],
+                                ['afternoon', 'Afternoon'],
+                            ].map(([v, l]) => (
+                                <button
+                                    key={v}
+                                    type="button"
+                                    aria-pressed={data.pickup_slot === v}
+                                    onClick={() =>
+                                        setData(
+                                            'pickup_slot',
+                                            data.pickup_slot === v ? '' : v,
+                                        )
+                                    }
+                                    className={choice(data.pickup_slot === v)}
+                                >
+                                    {l}
+                                </button>
+                            ))}
+                        </div>
+                        {err('pickup_date')}
+                        {err('pickup_slot')}
                     </div>
 
                     {delivery ? (
@@ -545,7 +614,7 @@ export default function Create({
                                         type="button"
                                         onClick={useMyLocation}
                                         disabled={locating}
-                                        className="rounded-full border border-[#0F1E2B]/25 px-4 py-1 text-xs font-semibold transition hover:bg-[#0F1E2B]/5 disabled:opacity-50"
+                                        className="rounded-full border border-pw-ink/25 px-4 py-2 text-xs font-semibold transition hover:bg-pw-ink/5 disabled:opacity-50"
                                     >
                                         {locating
                                             ? 'Locating…'
@@ -567,7 +636,7 @@ export default function Create({
                                         }
                                     />
                                 </div>
-                                <p className="mt-2 text-xs text-[#0F1E2B]/55">
+                                <p className="mt-2 text-xs text-pw-ink/70">
                                     Tap the map or drag the pin. S is{' '}
                                     {zone.shop.name}; the peach circle is where
                                     we deliver (up to {zone.max_km} km).
@@ -583,7 +652,7 @@ export default function Create({
                                         <button
                                             type="button"
                                             onClick={useSavedSpot}
-                                            className="rounded-full border border-[#0F1E2B]/25 px-4 py-1 text-xs font-semibold transition hover:bg-[#0F1E2B]/5"
+                                            className="rounded-full border border-pw-ink/25 px-4 py-2 text-xs font-semibold transition hover:bg-pw-ink/5"
                                         >
                                             Use my saved spot
                                         </button>
@@ -595,7 +664,7 @@ export default function Create({
                                                 fillAddress(pin, false)
                                             }
                                             disabled={findingAddress}
-                                            className="rounded-full border border-[#0F1E2B]/25 px-4 py-1 text-xs font-semibold transition hover:bg-[#0F1E2B]/5 disabled:opacity-50"
+                                            className="rounded-full border border-pw-ink/25 px-4 py-2 text-xs font-semibold transition hover:bg-pw-ink/5 disabled:opacity-50"
                                         >
                                             {findingAddress
                                                 ? 'Finding address…'
@@ -604,7 +673,7 @@ export default function Create({
                                     )}
                                 </div>
                                 {pinIsHome && (
-                                    <p className="mt-2 text-xs text-[#0F1E2B]/55">
+                                    <p className="mt-2 text-xs text-pw-ink/70">
                                         This is your saved spot. Change it any
                                         time in Settings.
                                     </p>
@@ -617,7 +686,7 @@ export default function Create({
                                         <input
                                             id="save_default_spot"
                                             type="checkbox"
-                                            className="h-4 w-4 accent-[#F0A98B]"
+                                            className="h-5 w-5 accent-pw-peach"
                                             checked={!!data.save_default_spot}
                                             onChange={(e) =>
                                                 setData(
@@ -633,12 +702,12 @@ export default function Create({
                                 )}
 
                                 {!pin && (
-                                    <p className="mt-2 text-sm text-[#0F1E2B]/70">
+                                    <p className="mt-2 text-sm text-pw-ink/70">
                                         No pin yet. Tap the map to drop one.
                                     </p>
                                 )}
                                 {pin && zoneQuote?.deliverable && (
-                                    <p className="mt-2 rounded-xl bg-[#2f7d5b]/10 px-3 py-2 text-sm text-[#1f5a40]">
+                                    <p className="mt-2 rounded-xl bg-pw-ok/10 px-3 py-2 text-sm text-pw-ok-deep">
                                         {zoneQuote.km.toFixed(1)} km from the
                                         shop · delivery fee{' '}
                                         <strong>
@@ -662,7 +731,7 @@ export default function Create({
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-2xl border border-dashed border-[#0F1E2B]/25 p-4 text-sm text-[#0F1E2B]/75">
+                        <div className="rounded-2xl border border-dashed border-pw-ink/25 p-4 text-sm text-pw-ink/75">
                             Bring your laundry to{' '}
                             <strong>{zone.shop.name}</strong>
                             {zone.shop.address
@@ -677,13 +746,53 @@ export default function Create({
                                 )}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-2 block text-xs font-semibold tracking-widest text-[#C96F48] uppercase hover:underline"
+                                className="mt-2 block text-sm font-semibold text-pw-rust hover:underline"
                             >
                                 Get directions to the shop
                             </a>
                         </div>
                     )}
 
+                    <details
+                        className="group border-t border-pw-ink/10 pt-7"
+                        open={Boolean(
+                            data.instructions ||
+                                data.photo ||
+                                errors.instructions ||
+                                errors.photo ||
+                                errors.photo_confirmed,
+                        )}
+                    >
+                        <summary className="flex cursor-pointer list-none items-center gap-3 rounded-2xl border-2 border-pw-ink/25 bg-white/40 px-4 py-3 transition hover:border-pw-ink/50 hover:bg-white/70 focus-visible:outline-2 [&::-webkit-details-marker]:hidden">
+                            <span
+                                aria-hidden="true"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pw-ink font-sans text-xs font-semibold text-pw-cream"
+                            >
+                                3
+                            </span>
+                            <Camera
+                                aria-hidden="true"
+                                className="h-5 w-5 shrink-0 text-pw-ink/70"
+                            />
+                            <span className="min-w-0 flex-1">
+                                <span className="block font-serif text-xl leading-tight">
+                                    Add a note or photo (optional)
+                                </span>
+                                <span className="block text-sm text-pw-ink/70 group-open:hidden">
+                                    Tap the arrow to open
+                                </span>
+                                <span className="hidden text-sm text-pw-ink/70 group-open:block">
+                                    Tap the arrow to close
+                                </span>
+                            </span>
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pw-ink text-pw-cream">
+                                <ChevronDown
+                                    aria-hidden="true"
+                                    className="h-5 w-5 transition-transform duration-200 group-open:rotate-180"
+                                />
+                            </span>
+                        </summary>
+                        <div className="mt-4 grid gap-6">
                     <div>
                         <label htmlFor="instructions" className={label}>
                             Special instructions
@@ -722,7 +831,7 @@ export default function Create({
                         {err('photo')}
 
                         {data.photo && preview && (
-                            <div className="mt-3 rounded-2xl border border-dashed border-[#0F1E2B]/25 p-3">
+                            <div className="mt-3 rounded-2xl border border-dashed border-pw-ink/25 p-3">
                                 <div className="flex items-center gap-4">
                                     <img
                                         src={preview}
@@ -733,19 +842,19 @@ export default function Create({
                                         <p className="truncate text-sm font-semibold">
                                             {data.photo.name}
                                         </p>
-                                        <p className="text-xs text-[#0F1E2B]/60">
+                                        <p className="text-xs text-pw-ink/70">
                                             {fmt(data.photo.size)}
                                         </p>
                                         <button
                                             type="button"
                                             onClick={clear}
-                                            className="mt-1 text-xs font-semibold tracking-widest text-[#C96F48] uppercase hover:underline"
+                                            className="mt-1 text-sm font-semibold text-pw-rust hover:underline"
                                         >
                                             Remove / Choose another
                                         </button>
                                     </div>
                                 </div>
-                                <p className="mt-3 text-xs text-[#0F1E2B]/60">
+                                <p className="mt-3 text-xs text-pw-ink/70">
                                     Only send photos of your laundry. Don't
                                     include faces, documents or your home.
                                 </p>
@@ -756,7 +865,7 @@ export default function Create({
                                     <input
                                         id="photo_confirmed"
                                         type="checkbox"
-                                        className="h-4 w-4 accent-[#F0A98B]"
+                                        className="h-5 w-5 accent-pw-peach"
                                         checked={data.photo_confirmed}
                                         onChange={(e) =>
                                             setData(
@@ -772,8 +881,11 @@ export default function Create({
                         )}
                     </div>
 
-                    <div>
-                        <p className={label}>Payment</p>
+                        </div>
+                    </details>
+
+                    <div className="border-t border-pw-ink/10 pt-7">
+                        <StepHead n={4} title="How will you pay?" />
                         <div
                             className="mt-2 grid gap-3 sm:grid-cols-2"
                             role="radiogroup"
@@ -788,11 +900,12 @@ export default function Create({
                                 }
                                 className={choice(!gcash)}
                             >
-                                <span className="block text-sm font-semibold">
-                                    Cash
-                                </span>
+                                <span className="flex items-center gap-2 text-sm font-semibold">
+<Banknote aria-hidden="true" className="h-5 w-5 shrink-0" />
+<span>Cash</span>
+</span>
                                 <span
-                                    className={`block text-xs ${!gcash ? 'text-[#F7F1E8]/70' : 'text-[#0F1E2B]/55'}`}
+                                    className={`block text-xs ${!gcash ? 'text-pw-cream/70' : 'text-pw-ink/70'}`}
                                 >
                                     {delivery
                                         ? 'Pay when we hand it back'
@@ -808,11 +921,12 @@ export default function Create({
                                 }
                                 className={choice(gcash)}
                             >
-                                <span className="block text-sm font-semibold">
-                                    GCash{demoPayments ? ' (demo)' : ''}
-                                </span>
+                                <span className="flex items-center gap-2 text-sm font-semibold">
+<Smartphone aria-hidden="true" className="h-5 w-5 shrink-0" />
+<span>GCash{demoPayments ? ' (demo)' : ''}</span>
+</span>
                                 <span
-                                    className={`block text-xs ${gcash ? 'text-[#F7F1E8]/70' : 'text-[#0F1E2B]/55'}`}
+                                    className={`block text-xs ${gcash ? 'text-pw-cream/70' : 'text-pw-ink/70'}`}
                                 >
                                     {demoPayments
                                         ? 'Practice payment. No real money moves'
@@ -823,7 +937,7 @@ export default function Create({
                         {err('payment_method')}
                     </div>
 
-                    <div className="rounded-2xl border border-dashed border-[#0F1E2B]/25 p-4">
+                    <div className="rounded-2xl border border-dashed border-pw-ink/25 p-4">
                         <label
                             htmlFor="save_it"
                             className="flex cursor-pointer items-center gap-2 text-sm"
@@ -831,7 +945,7 @@ export default function Create({
                             <input
                                 id="save_it"
                                 type="checkbox"
-                                className="h-4 w-4 accent-[#F0A98B]"
+                                className="h-5 w-5 accent-pw-peach"
                                 checked={saveIt}
                                 onChange={(e) => toggleSave(e.target.checked)}
                             />
@@ -851,7 +965,7 @@ export default function Create({
                                     }
                                 />
                                 {err('save_as')}
-                                <p className="mt-2 text-xs text-[#0F1E2B]/55">
+                                <p className="mt-2 text-xs text-pw-ink/70">
                                     Saves the service, amount, how we get it,
                                     address, pin and notes. Photos and payment
                                     are not saved.{' '}
@@ -863,34 +977,44 @@ export default function Create({
                         )}
                     </div>
 
-                    <div className="border-t border-dashed border-[#0F1E2B]/25 pt-5">
-                        <div className="flex justify-between text-sm text-[#0F1E2B]/70">
+                    <div className="border-t border-dashed border-pw-ink/25 pt-5">
+                        <div className="flex justify-between text-sm text-pw-ink/70">
                             <span>Laundry</span>
-                            <span>₱{laundry.toFixed(2)}</span>
+                            <span>{money(laundry)}</span>
                         </div>
                         {delivery && (
-                            <div className="mt-1 flex justify-between text-sm text-[#0F1E2B]/70">
+                            <div className="mt-1 flex justify-between text-sm text-pw-ink/70">
                                 <span>Delivery fee</span>
                                 <span>
                                     {zoneQuote?.deliverable
-                                        ? `₱${fee.toFixed(2)}`
+                                        ? money(fee)
                                         : 'Pin your spot'}
                                 </span>
                             </div>
                         )}
                         <div className="mt-3 flex items-end justify-between">
-                            <span className="text-[10px] tracking-widest text-[#0F1E2B]/50 uppercase">
+                            <span className="text-xs tracking-widest text-pw-ink/70 uppercase">
                                 Total
                             </span>
-                            <span className="font-serif text-4xl">
-                                ₱{total.toFixed(2)}
+                            <span className="font-sans text-4xl font-semibold tabular-nums">
+                                {money(total)}
                             </span>
                         </div>
+                        {picked && readyHours > 0 && (
+                            <p className="mt-3 text-xs text-pw-ink/70">
+                                Usually ready within about{' '}
+                                {readyHours % 24 === 0
+                                    ? `${readyHours / 24} ${readyHours === 24 ? 'day' : 'days'}`
+                                    : `${readyHours} hours`}
+                                . Your status updates as we go.
+                            </p>
+                        )}
                     </div>
 
                     <button
+                        ref={submitRef}
                         disabled={locked}
-                        className="w-full rounded-full bg-[#0F1E2B] px-8 py-3 font-semibold text-[#F7F1E8] transition hover:-translate-y-0.5 hover:bg-[#F0A98B] hover:text-[#0F1E2B] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="btn btn-navy w-full py-3 text-base"
                     >
                         {processing
                             ? 'Sending...'
@@ -899,9 +1023,41 @@ export default function Create({
                               : 'Submit order'}
                     </button>
                     {lockReason && !processing && (
-                        <p className="-mt-3 text-center text-xs text-[#0F1E2B]/60">
+                        <p className="-mt-3 text-center text-xs text-pw-ink/70">
                             {lockReason}
                         </p>
+                    )}
+
+                    {picked && !submitInView && (
+                        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 px-3 md:bottom-4">
+                            <div className="paper mx-auto flex max-w-xl items-center justify-between gap-3 !rounded-2xl p-3 pl-5">
+                                <div className="min-w-0">
+                                    <p className="text-xs tracking-widest text-pw-ink/70 uppercase">
+                                        Total
+                                    </p>
+                                    <p className="font-sans text-2xl font-semibold tabular-nums">
+                                        {money(total)}
+                                    </p>
+                                </div>
+                                {locked && !processing ? (
+                                    <p className="max-w-[55%] text-right text-xs text-pw-ink/70">
+                                        {lockReason}
+                                    </p>
+                                ) : (
+                                    <button
+                                        type="submit"
+                                        disabled={locked}
+                                        className="btn btn-navy"
+                                    >
+                                        {processing
+                                            ? 'Sending...'
+                                            : gcash
+                                              ? 'Place order & pay'
+                                              : 'Place order'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     )}
                 </form>
             </div>

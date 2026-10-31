@@ -204,7 +204,7 @@ export default function LocationPicker({
                     placeholder="Search your barangay, street or landmark (e.g. Abuyog)"
                     aria-label="Search for a place"
                     autoComplete="off"
-                    className="w-full rounded-full border border-[#0F1E2B]/25 bg-white px-4 py-2 pr-20 text-sm text-[#0F1E2B] transition outline-none focus:border-[#0F1E2B]"
+                    className="w-full rounded-full border border-pw-ink/25 bg-white px-4 py-2 pr-20 text-sm text-pw-ink transition outline-none focus:border-pw-ink"
                     onChange={(e) => typing(e.target.value)}
                     // Enter must search, not submit the whole order form.
                     onKeyDown={(e) => {
@@ -218,7 +218,7 @@ export default function LocationPicker({
                 <button
                     type="button"
                     onClick={() => search(query)}
-                    className="absolute top-1 right-1 rounded-full bg-[#0F1E2B] px-3 py-1 text-xs font-semibold text-[#F7F1E8] transition hover:bg-[#F0A98B] hover:text-[#0F1E2B]"
+                    className="absolute top-1 right-1 rounded-full bg-pw-ink px-3 py-1 text-xs font-semibold text-pw-cream transition hover:bg-pw-peach hover:text-pw-ink"
                 >
                     {busy ? '…' : 'Search'}
                 </button>
@@ -226,7 +226,7 @@ export default function LocationPicker({
                 {hits.length > 0 && (
                     <ul
                         role="listbox"
-                        className="absolute right-0 left-0 z-20 mt-2 max-h-56 overflow-y-auto rounded-2xl border border-[#0F1E2B]/15 bg-white p-1 shadow-xl"
+                        className="absolute right-0 left-0 z-20 mt-2 max-h-56 overflow-y-auto rounded-2xl border border-pw-ink/15 bg-white p-1 shadow-xl"
                     >
                         {hits.map((h) => (
                             <li key={h.place_id}>
@@ -235,7 +235,7 @@ export default function LocationPicker({
                                     role="option"
                                     aria-selected={false}
                                     onClick={() => pick(h)}
-                                    className="block w-full rounded-xl px-3 py-2 text-left text-sm text-[#0F1E2B] transition hover:bg-[#0F1E2B]/5"
+                                    className="block w-full rounded-xl px-3 py-2 text-left text-sm text-pw-ink transition hover:bg-pw-ink/5"
                                 >
                                     {h.display_name}
                                 </button>
@@ -244,12 +244,12 @@ export default function LocationPicker({
                     </ul>
                 )}
             </div>
-            {note && <p className="mt-1 text-xs text-[#0F1E2B]/60">{note}</p>}
+            {note && <p className="mt-1 text-xs text-pw-ink/70">{note}</p>}
 
             {/* "isolate" keeps the map's own layers from floating over the sticky menu bar. */}
             <div
                 ref={box}
-                className="relative isolate z-0 mt-2 h-64 w-full overflow-hidden rounded-2xl border border-[#0F1E2B]/20"
+                className="relative isolate z-0 mt-2 h-64 w-full overflow-hidden rounded-2xl border border-pw-ink/20"
                 aria-label="Map: tap to drop a pin where we should pick up and deliver"
             />
         </div>

@@ -14,6 +14,7 @@ void createInertiaApp({
     layout: (name) => {
         switch (true) {
             case name.toLowerCase() === 'welcome':
+            case name === 'legal':
             case name.startsWith('Orders/'):
             case name.startsWith('Admin/'):
                 return null;

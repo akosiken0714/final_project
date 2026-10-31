@@ -13,7 +13,8 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
-// The pay screen for GCash orders. Right now it talks to the demo gateway (no real money).
+// The pay screen for GCash orders. Right now it talks to the demo gateway (no real money),
+// and the demo gateway is switched off on a live site.
 class PaymentController extends Controller
 {
     public function show(Request $request, Order $order): Response
@@ -24,7 +25,9 @@ class PaymentController extends Controller
             'order' => $order->load('service'),
             'demo' => Payments::isDemo(),
             // Only the demo screen shows its code, so people can try it. A real gateway never would.
-            'demoCode' => Payments::isDemo() ? (string) config('laundry.payments.demo_code') : null,
+            'demoCode' => Payments::isDemo() && config('laundry.payments.demo_code')
+                ? (string) config('laundry.payments.demo_code')
+                : null,
         ]);
     }
 
@@ -85,9 +88,13 @@ class PaymentController extends Controller
         return redirect('/orders')->with('success', 'Payment received! Reference '.$result->reference.'.');
     }
 
-    // Only the customer who placed a GCash order can open its pay screen.
+    // Only the customer who placed a GCash order can open its pay screen,
+    // and only while online payment is actually available (never the demo on a live site).
     private function mine(Request $request, Order $order): void
     {
+        abort_unless(Payments::enabled(), 404);
         abort_unless($order->user_id === $request->user()->id && $order->payment_method === Order::GCASH, 404);
+        // A cancelled order can't be paid.
+        abort_if($order->status === Order::CANCELLED, 404);
     }
 }

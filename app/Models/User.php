@@ -19,7 +19,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 /**
  * @property int $id
  * @property string $name
- * @property string $email
+ * @property string|null $email
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -72,8 +72,27 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(Order::class);
     }
 
+    // Three kinds of account:
+    //   customer = orders laundry     staff = the counter team (cashier)     admin = the owner (everything)
+    public const CUSTOMER = 'customer';
+
+    public const STAFF = 'staff';
+
+    public const ADMIN = 'admin';
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === self::ADMIN;
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === self::STAFF;
+    }
+
+    // Staff or admin: anyone who runs the shop day (sees the order desk, takes walk-ins, records intake).
+    public function isShop(): bool
+    {
+        return $this->isAdmin() || $this->isStaff();
     }
 }

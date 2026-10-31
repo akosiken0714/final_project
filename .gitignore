@@ -59,3 +59,10 @@ yarn-error.log
 
 # OS noise
 Thumbs.db
+
+# Zips, check output and scratch files (never commit or deploy these)
+*.zip
+/checks.txt
+/phinewash-checks.txt
+/storage/debugbar
+/public/fonts-manifest.dev.json

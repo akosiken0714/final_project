@@ -5,6 +5,7 @@ import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -49,6 +50,7 @@ export default function Register({ passwordRules }: Props) {
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="name"
+                                    maxLength={60}
                                     name="name"
                                     placeholder="Full name"
                                 />
@@ -129,9 +131,11 @@ export default function Register({ passwordRules }: Props) {
                                 />
                                 <InputError message={errors.password} />
                                 <p className="text-muted-foreground text-xs">
-                                    Use a long password you don&apos;t use
-                                    anywhere else. You can pin your usual pickup
-                                    spot on the map later in Settings.
+                                    At least 8 characters with a big letter
+                                    (A-Z), a small letter (a-z) and a number.
+                                    Don&apos;t reuse a password from another
+                                    site. You can pin your usual pickup spot on
+                                    the map later in Settings.
                                 </p>
                             </div>
 
@@ -153,10 +157,47 @@ export default function Register({ passwordRules }: Props) {
                                 />
                             </div>
 
+                            <div className="grid gap-2">
+                                <div className="flex items-start gap-3">
+                                    <Checkbox
+                                        id="terms"
+                                        name="terms"
+                                        required
+                                        tabIndex={5}
+                                        className="mt-0.5"
+                                    />
+                                    <Label
+                                        htmlFor="terms"
+                                        className="text-sm leading-snug font-normal"
+                                    >
+                                        I have read and agree to the{' '}
+                                        <a
+                                            href="/terms"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="underline"
+                                        >
+                                            Terms of Service
+                                        </a>{' '}
+                                        and the{' '}
+                                        <a
+                                            href="/privacy"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="underline"
+                                        >
+                                            Privacy Policy
+                                        </a>
+                                        . <Req />
+                                    </Label>
+                                </div>
+                                <InputError message={errors.terms} />
+                            </div>
+
                             <Button
                                 type="submit"
                                 className="mt-2 w-full"
-                                tabIndex={5}
+                                tabIndex={6}
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
@@ -166,7 +207,7 @@ export default function Register({ passwordRules }: Props) {
 
                         <div className="text-muted-foreground text-center text-sm">
                             Already have an account?{' '}
-                            <TextLink href={login()} tabIndex={6}>
+                            <TextLink href={login()} tabIndex={7}>
                                 Log in
                             </TextLink>
                         </div>

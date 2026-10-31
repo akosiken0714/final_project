@@ -6,7 +6,7 @@ use App\Models\Order;
 use Illuminate\Support\Str;
 
 // Pretend GCash. It checks the number looks right and the demo code matches, then says "paid".
-// No money moves and nothing leaves the server.
+// No money moves and nothing leaves the server. Payments::gateway() refuses to build this on a live site.
 class DemoGcashGateway implements PaymentGateway
 {
     public function name(): string
@@ -26,7 +26,10 @@ class DemoGcashGateway implements PaymentGateway
             return new PaymentResult(false, null, $masked, 'Enter a valid GCash number (09XXXXXXXXX).');
         }
 
-        if (! hash_equals((string) config('laundry.payments.demo_code'), (string) ($details['code'] ?? ''))) {
+        // No demo code set = nothing can be accepted (never fall back to a guessable default).
+        $expected = (string) config('laundry.payments.demo_code');
+
+        if ($expected === '' || ! hash_equals($expected, (string) ($details['code'] ?? ''))) {
             return new PaymentResult(false, null, $masked, 'That code is not correct. Please try again.');
         }
 

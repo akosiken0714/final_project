@@ -17,15 +17,15 @@ export default function ErrorPage({ status }: { status: number }) {
         <Shell>
             <Head title={String(status)} />
             <div className="mx-auto flex max-w-md flex-col items-center text-center">
-                <div className="w-full rounded-3xl bg-[#F7F1E8] p-10 text-[#0F1E2B] shadow-2xl">
-                    <p className="text-xs tracking-[0.3em] text-[#0F1E2B]/60 uppercase">
+                <div className="w-full rounded-3xl bg-pw-cream p-10 text-pw-ink shadow-2xl">
+                    <p className="text-xs tracking-[0.3em] text-pw-ink/70 uppercase">
                         Error {status}
                     </p>
                     <p className="mt-2 font-serif text-5xl">{title}</p>
-                    <p className="mt-3 text-[#0F1E2B]/70">{text}</p>
+                    <p className="mt-3 text-pw-ink/70">{text}</p>
                     <Link
                         href="/"
-                        className="mt-8 inline-block rounded-full bg-[#0F1E2B] px-8 py-3 font-semibold text-[#F7F1E8] transition hover:bg-[#F0A98B] hover:text-[#0F1E2B]"
+                        className="mt-8 inline-block rounded-full bg-pw-ink px-8 py-3 font-semibold text-pw-cream transition hover:bg-pw-peach hover:text-pw-ink"
                     >
                         Back home
                     </Link>

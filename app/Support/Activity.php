@@ -36,10 +36,11 @@ class Activity
         }
     }
 
+    // The shop team: admins and staff (cashiers) both want to hear about new and cancelled orders.
     public static function notifyAdmins(string $title, string $body, string $url, ?int $orderId = null): void
     {
         try {
-            Notification::send(User::where('role', 'admin')->get(), new OrderNotice($title, $body, $url, $orderId));
+            Notification::send(User::whereIn('role', [User::ADMIN, User::STAFF])->get(), new OrderNotice($title, $body, $url, $orderId));
         } catch (\Throwable $e) {
             report($e);
         }
@@ -47,7 +48,8 @@ class Activity
 
     public static function notifyUser(?User $user, string $title, string $body, string $url, ?int $orderId = null): void
     {
-        if (! $user) {
+        // A walk-in customer without an email can never log in, so nobody would ever read the bell message.
+        if (! $user || $user->email === null) {
             return;
         }
 
